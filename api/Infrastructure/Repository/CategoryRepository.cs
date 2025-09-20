@@ -31,12 +31,17 @@ public class CategoryRepository : ICategoryRepository
         CategoryFilterRequestDto filter
     )
     {
-        var allCategories = _db.Category.Include(p => p.Products);
+        IQueryable<Category> query = _db.Category.Include(p => p.Products);
 
-        // fillter
+        if(filter.NumberOfProducts.HasValue)
+        {
+            query = query.Where(e => e.NumberOfProducts == filter.NumberOfProducts);
+        }
 
         return PagedList<Category>.ToPagedList(
-            allCategories.OrderByDescending(c => c.Id),
+            filter.IsDecending 
+                ? query.OrderByDescending(c => c.Id) 
+                : query.OrderBy(c => c.Id),
             pagination.PageNumber,
             pagination.PageSize
         );

@@ -17,7 +17,8 @@ namespace api
 
             //services
             this._services.AddScoped<ITokenService, TokenService>();
-
+            this._services.AddScoped<ICloudinaryService, CloudinaryService>();
+            
             // repositories
             this._services.AddScoped<ICategoryRepository, CategoryRepository>();
             this._services.AddScoped<IProductRepository, ProductRepository>();

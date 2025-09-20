@@ -94,13 +94,13 @@ namespace api.Controllers
             try
             {
                 if (
-                string.IsNullOrWhiteSpace(dto.Name) &&
-                string.IsNullOrWhiteSpace(dto.Description) &&
-                string.IsNullOrWhiteSpace(dto.Image) &&
-                !dto.Price.HasValue &&
-                !dto.Quantity.HasValue &&
-                !dto.CategoryId.HasValue
-            )
+                    string.IsNullOrWhiteSpace(dto.Name) &&
+                    string.IsNullOrWhiteSpace(dto.Description) &&
+                    // !dto.Image &&
+                    !dto.Price.HasValue &&
+                    !dto.Quantity.HasValue &&
+                    !dto.CategoryId.HasValue
+                )
                 {
                     throw new BadRequestException("At least one field should have a value.");
                 }

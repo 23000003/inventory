@@ -11,5 +11,5 @@ public class Category
   public required string CreatedBy { get; set; }
   public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-  public ICollection<Product> Products;
+  public ICollection<Product> Products = default!;
 }

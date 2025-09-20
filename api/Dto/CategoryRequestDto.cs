@@ -6,16 +6,10 @@ namespace api.Dto
     public class CategoryFilterRequestDto
     {
         [ModelBinder(Name = "number_of_products")]
-        public string? NumberOfProducts { get; set; }
+        public int? NumberOfProducts { get; set; }
         
         [ModelBinder(Name = "is_descending")]
         public bool IsDecending { get; set; } = false;
-
-        [ModelBinder(Name = "page_num")]
-        public int PageNum { get; set; } = 1;
-
-        [ModelBinder(Name = "take_records")]
-        public int TakeRecords { get; set; } = 10;
     }
 
     public class CategoryCreateRequestDto

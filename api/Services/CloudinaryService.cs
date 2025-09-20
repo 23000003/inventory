@@ -2,10 +2,11 @@
 using CloudinaryDotNet.Actions;
 using Microsoft.Extensions.Options;
 using api.Configurations;
+using api.Interfaces;
 
 namespace api.Services
 {
-    public class CloudinaryService
+    public class CloudinaryService : ICloudinaryService
     {
         private readonly Cloudinary _cloudinary;
         private readonly CloudinaryConfig _config;
@@ -27,13 +28,13 @@ namespace api.Services
         }
 
 
-        public async Task<bool> Upload(ImageUploadParams parameters)
+        public async Task<bool> Upload(IFormFile file)
         {
             try
             {
                 var uploadParams = new ImageUploadParams()
                 {
-                    File = new FileDescription(parameters.File)
+                    // File = new FileDescription(file.Pat)
                 };
                 var uploadResult = await this._cloudinary.UploadAsync(uploadParams);
                 

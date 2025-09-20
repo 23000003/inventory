@@ -5,12 +5,12 @@ namespace api.Infrastructure.Model;
 public class Product
 {
   public int Id { get; set; }
-  public required string Name { get; set; }
-  public required string Description { get; set;}
+  public string Name { get; set; } = default!;
+  public string Description { get; set;} = default!;
   public float Price { get; set; }
   public int Quantity { get; set; }
-  public required string Image { get; set; }  
-  public required string CreatedBy { get; set; }
+  public string Image { get; set; } = default!;
+  public string CreatedBy { get; set; } = default!;
   public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
   public int CategoryId { get; set; }

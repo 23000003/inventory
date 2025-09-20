@@ -23,7 +23,7 @@ namespace api.Dto
 
         [Required]
         [ModelBinder(Name = "image")]
-        public string Image { get; set; } = string.Empty;
+        public IFormFile Image { get; set; } = default!;
 
         [Required]
         [ModelBinder(Name = "created_by")]
@@ -37,10 +37,10 @@ namespace api.Dto
     public class ProductFilterRequestDto
     {
         [ModelBinder(Name = "price")]
-        public string? Price { get; set; }
+        public float? Price { get; set; }
 
         [ModelBinder(Name = "quantity")]
-        public string? Quantity { get; set; }
+        public int? Quantity { get; set; }
 
         [ModelBinder(Name = "is_descending")]
         public bool IsDecending { get; set; } = false;
@@ -62,7 +62,7 @@ namespace api.Dto
         public int? Quantity { get; set; }
 
         [ModelBinder(Name = "image")]
-        public string? Image { get; set; }
+        public IFormFile? Image { get; set; }
 
         [ModelBinder(Name = "category_id")]
         public int? CategoryId { get; set; }

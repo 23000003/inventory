@@ -3,6 +3,7 @@ using api.Exceptions;
 using api.Helpers;
 using api.Infrastructure.Interfaces;
 using api.Infrastructure.Model;
+using api.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Security.Cryptography.X509Certificates;
@@ -12,9 +13,14 @@ namespace api.Infrastructure.Repository;
 public class ProductRepository : IProductRepository
 {
     private readonly ClarenceDbContext _db;
+    private readonly ICloudinaryService _cloudinary;
 
-    public ProductRepository(ClarenceDbContext db)
+    public ProductRepository(
+        ClarenceDbContext db, 
+        ICloudinaryService cloudinary
+    )
     {
+        this._cloudinary = cloudinary;
         this._db = db;
     }
 
@@ -33,12 +39,23 @@ public class ProductRepository : IProductRepository
         ProductFilterRequestDto filter
     )
     {
-        var allProducts = _db.Products.Include(p => p.Category);
+        IQueryable<Product> query = _db.Products.Include(p => p.Category);
 
         // filter
+        if(filter.Price.HasValue)
+        {
+            query = query.Where(e => e.Price == filter.Price);
+        }
+
+        if(filter.Quantity.HasValue) 
+        {
+            query = query.Where(e => e.Quantity == filter.Quantity);
+        }
 
         return PagedList<Product>.ToPagedList(
-            allProducts.OrderByDescending(p => p.Id),
+            filter.IsDecending 
+                ? query.OrderByDescending(e => e.Id) 
+                : query.OrderBy(e => e.Id),
             pagination.PageNumber,
             pagination.PageSize
         );
@@ -46,6 +63,9 @@ public class ProductRepository : IProductRepository
 
     public void CreateProduct(ProductCreateRequestDto product)
     {
+
+        this._cloudinary.Upload(product.Image);
+
         // will map it lator
         Product newProduct = new()
         {
@@ -53,7 +73,7 @@ public class ProductRepository : IProductRepository
             Description = product.Description,
             Price = product.Price,
             Quantity = product.Quantity,
-            Image = product.Image,
+            // Image = product.Image,
             CreatedBy = product.CreatedBy,
             CategoryId = product.CategoryId
         };
@@ -67,7 +87,7 @@ public class ProductRepository : IProductRepository
         var currentProduct = GetProduct(productId);
 
         if (!string.IsNullOrWhiteSpace(product.Name)) currentProduct.Name = product.Name;
-        if (!string.IsNullOrWhiteSpace(product.Image)) currentProduct.Image = product.Image;
+        // if (!string.IsNullOrWhiteSpace(product.Image)) currentProduct.Image = product.Image;
         if (!string.IsNullOrWhiteSpace(product.Description)) currentProduct.Description = product.Description;
 
         if (product.Price.HasValue) currentProduct.Price = product.Price.Value;

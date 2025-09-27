@@ -1,53 +1,58 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-
 import InventoryHeader from "@/components/inventory/inventory-header";
 import FilterSidebar from "@/components/inventory/filter-sidebar";
 import ProductCard from "@/components/inventory/product-card";
 
-import { mockProducts } from "@/data/inventory";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { Pagination } from "@/types/pagination";
 import type { ProductFilter } from "@/types/product";
+import useInventory from "@/hooks/useInventory";
+import Pagination from "@/components/Pagination";
+import type { PaginationType } from "@/types/pagination";
 
 const Inventory = () => {
   const [params, setSearchParams] = useSearchParams();
-
-  const searchParams : Pagination & ProductFilter = useMemo(
+  
+  const searchParams : PaginationType & ProductFilter = useMemo(
     () => ({
-      page: parseInt(params.get("page") ?? "1"),
-      pageSize: parseInt(params.get("pageSize") ?? "12"),
-      searchTerm: params.get("search") ?? "",
-      priceRange: params.get("priceRange")?.split(",") ?? [],
-      sortBy: params.get("sortBy") ?? "",
+      page: parseInt(params.get("page-number") ?? "1"),
+      pageSize: parseInt(params.get("page-size") ?? "8"),
+      searchTerm: params.get("search-term") ?? "",
+      priceRange: params.get("price-range")?.split(",") ?? [],
+      sortBy: params.get("sort-by") ?? "",
       category: params.get("category")?.split(",") ?? [],
     }),
     [params],
   );
 
+  const { allProducts, allCategories, isLoading} = useInventory(
+    searchParams
+  );
+
+  const handlePageAndSizeChange = useCallback((value: string) => {
+    // setSearchParams({ page-number: })
+  }, [])
+  
+  if(isLoading) return <h1>Loading...</h1>;
+
   const viewMode = "grid";
-  const filteredProducts = mockProducts.slice(0, 12); 
-  const paginatedProducts = filteredProducts; 
-  const currentPage = 1;
-  const totalPages = 3;
 
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <InventoryHeader
- 
         />
 
         <div className="flex gap-8 mt-8">
           <aside className="hidden lg:block flex-shrink-0">
-            <FilterSidebar />
+            <FilterSidebar 
+              allCategories={allCategories}
+            />
           </aside>
 
           {/* Display products */}
-          <div className="flex-1">
-            {paginatedProducts.length === 0 ? (
+          <div className="flex-1 max-w-600 w-600">
+            {allProducts?.data?.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                   <div className="text-muted-foreground text-2xl">📦</div>
@@ -66,49 +71,16 @@ const Inventory = () => {
                       : "grid-cols-1"
                   }`}
                 >
-                  {paginatedProducts.map((product) => (
+                  {allProducts?.data?.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-4 mt-12">
-                    <Button
-                      variant="outline"
-                      onClick={() => {}}
-                      disabled={currentPage === 1}
-                      className="gap-2"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Previous
-                    </Button>
-
-                    <div className="flex items-center gap-2">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <Button
-                          key={page}
-                          variant={page === currentPage ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => {}}
-                          className="w-8 h-8 p-0"
-                        >
-                          {page}
-                        </Button>
-                      ))}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      onClick={() => {}}
-                      // disabled={true}
-                      className="gap-2"
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
+                {allProducts?.pagination ? (
+                  <Pagination
+                    {...allProducts?.pagination}
+                  />
+                ): null}
               </>
             )}
           </div>

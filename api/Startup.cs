@@ -4,7 +4,7 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 
-namespace api
+namespace api                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 {
     internal partial class StartupConfigurer
     {
@@ -29,6 +29,18 @@ namespace api
             this._services.AddControllers();
             this._services.AddEndpointsApiExplorer();
             this._services.AddSwaggerGen();
+
+            this._services.AddCors(options =>
+                {
+                    options.AddPolicy("AllowSpecificOrigin",
+                        builder =>
+                        {
+                            builder.WithOrigins("http://localhost:5173")
+                                .AllowAnyHeader()
+                                .AllowAnyMethod()
+                                .AllowCredentials();
+                        });
+                });
 
             this._services.AddSwaggerGen(option =>
             {
@@ -81,6 +93,7 @@ namespace api
                 app.UseSwaggerUI();
             }
 
+            app.UseCors("AllowSpecificOrigin");
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseHttpsRedirection();

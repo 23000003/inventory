@@ -5,10 +5,8 @@ import type { ApiResponse } from "@/types/api-response";
 const BASE_URL = `/category`;
 
 const CategoryService = {
-  getAll: () =>
+  getAll: () => // apply pagination
     api.get<ApiResponse<CategorySchemaType[]>>(`${BASE_URL}`),
-  getAllNamesOnly: () =>
-    api.get<ApiResponse<string[]>>(`${BASE_URL}/names`),
 };
 
 export default CategoryService;

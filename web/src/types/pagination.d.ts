@@ -1,4 +1,4 @@
-export type Pagination = {
+export type PaginationType = {
   page: number;
   pageSize: number;
 }
@@ -7,7 +7,7 @@ export type PaginationDetails = {
     pageNumber: number;
     totalPages: number;
     pageSize: number;
-    totalCount: number;
+    totalPageSize: number;
     hasPrevious: boolean;
     hasNext: boolean;
 };

@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Heart, Eye } from "lucide-react";
+import { ShoppingCart, Eye, Pencil } from "lucide-react";
 import { useState } from "react";
 import { type ProductSchemaType } from "@/schemas/product.schema";
 
@@ -51,7 +51,7 @@ const ProductCard: React.FC<Readonly<ProductCardProps>> = ({ product }) => {
               variant="secondary"
               className="w-8 h-8 p-0 rounded-full shadow-lg cursor-pointer hover:bg-[#7C3BED] hover:text-white"
             >
-              <Heart className="w-4 h-4" />
+              <Pencil className="w-4 h-4" />
             </Button>
             <Button
               size="sm"
@@ -87,7 +87,7 @@ const ProductCard: React.FC<Readonly<ProductCardProps>> = ({ product }) => {
           </div>
           <div className="flex items-center justify-between">
             <span className="font-bold text-lg text-price-primary group-hover:text-primary ">
-              {product.price}
+              P{product.price}
             </span>
           </div>
         </div>

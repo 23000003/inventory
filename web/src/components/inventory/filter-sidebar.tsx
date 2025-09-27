@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
-import { mockCategories } from "@/data/inventory";
+import type { CategorySchemaType } from "@/schemas/category.schema";
+// import { mockCategories } from "@/data/inventory";
+
+type Props = {
+  allCategories: CategorySchemaType[] | undefined;
+}
 
 type PriceRange = {
   min: number;
@@ -22,12 +27,14 @@ const priceRanges: PriceRange[] = [
   { min: 5000, max: 999999, label: "₱5,000+", count: 78 }
 ];
 
-const FilterSidebar: React.FC = () => {
+const FilterSidebar: React.FC<Readonly<Props>> = ({ allCategories }) => {
   const [showAllPrices, setShowAllPrices] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
 
+  if(!allCategories) return;
+
   const visiblePriceRanges = showAllPrices ? priceRanges : priceRanges.slice(0, 3);
-  const visibleCategories = showAllCategories ? mockCategories : mockCategories.slice(0, 4);
+  const visibleCategories = showAllCategories ? allCategories : allCategories?.slice(0, 4);
 
   return (
     <div className="w-80 space-y-4">
@@ -116,7 +123,7 @@ const FilterSidebar: React.FC = () => {
             </div>
           ))}
 
-          {mockCategories.length > 4 && (
+          {allCategories.length > 4 && (
             <>
               <Separator />
               <Button

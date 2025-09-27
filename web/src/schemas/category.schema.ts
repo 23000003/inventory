@@ -5,7 +5,6 @@ export const CategorySchema = z.object({
   id: z.number(),
   name: z.string(),
   description: z.string(),
-  price: z.string(),
   number_of_products: z.string(),
   created_by: z.string(),
   created_date: z.coerce

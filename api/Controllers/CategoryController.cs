@@ -1,170 +1,140 @@
 using api.Dto;
 using api.Exceptions;
 using api.Helpers;
-using api.Infrastructure.Interfaces;
 using api.Infrastructure.Model;
+using api.Interfaces.Services;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace api.Controllers
 {
-    [Route("api/category")]
+    [Authorize]
     [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/category")]
     [Produces("application/json")]
-    public class CategoryController : ControllerBase
+    public class CategoryController : BaseController
     {
-        private readonly ICategoryRepository _repository;
+        private readonly ICategoryService _service;
         private readonly ILogger<CategoryController> _logger;
 
         public CategoryController(
-            ICategoryRepository repository,
-            ILogger<CategoryController> logger
+            ILogger<CategoryController> logger,
+            ICategoryService service
         )
         {
             _logger = logger;
-            _repository = repository;
+            _service = service;
         }
 
         #region GetRequest
         [HttpGet]
-        public ApiResponse<IEnumerable<Category>> GetAllCategories(
+        [Authorize(Roles = "Inventory, Sales")]
+        public async Task<IActionResult> GetAllCategories(
             [FromQuery] Pagination pagination,
             [FromQuery] CategoryFilterRequestDto filter
         )
         {
             try
             {
-                var data = _repository.GetAllCategory(pagination, filter);
-                return new ApiResponse<IEnumerable<Category>>
-                {
-                    Success = true,
-                    Data = data
-                };
+                var res = await _service.GetAllCategory(pagination);
+                
+                return !res.Success ? GetActionResultError(res) : Ok(res);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new Exception(ex.Message);
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
             }
         }
 
-        [HttpGet("{categoryId:int}")]
-        public ApiResponse<Category> GetCategory([FromRoute] int categoryId)
-        {
-            try
-            {
-                var data = _repository.GetCategory(categoryId);
-                return new ApiResponse<Category>
-                {
-                    Success = true,
-                    Data = data
-                };
-            }
-            catch (NotFoundException ex)
-            {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
-            }
-        }
+        //[HttpGet("{categoryId:int}")]
+        //public ApiResponse<Category> GetCategory([FromRoute] int categoryId)
+        //{
+        //    try
+        //    {
+        //        var data = _repository.GetCategory(categoryId);
+        //        return new ApiResponse<Category>
+        //        {
+        //            Success = true,
+        //            Data = data
+        //        };
+        //    }
+        //    catch (NotFoundException ex)
+        //    {
+        //        _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
+        //        throw new NotFoundException(ex.Message);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
+        //        throw new NotFoundException(ex.Message);
+        //    }
+        //}
         #endregion
 
         #region CreateRequest
         [HttpPost("create-category")]
-        public ApiResponse<Category> CreateCategory([FromBody] CategoryCreateRequestDto dto)
+        [Authorize(Roles = "Inventory")]
+        public async Task<IActionResult> CreateCategory([FromBody] CategoryCreateRequestDto req)
         {
             try
             {
-                _repository.CreateCategory(dto);
-
-                return new ApiResponse<Category>
-                {
-                    Success = true,
-                    Message = "Category successfully created.",
-                    Data = null
-                };
+                var res = await _service.CreateCategory(req);
+                return !res.Success ? GetActionResultError(res) : Ok(res);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
             }
         }
         #endregion
 
         #region UpdateRequest
         [HttpPatch("update-category/{categoryId:int}")]
-        public ApiResponse<Category> UpdateCategory(
-            [FromBody] CategoryUpdateRequestDto dto,
+        [Authorize(Roles = "Inventory")]
+        public async Task<IActionResult> UpdateCategory(
+            [FromBody] CategoryUpdateRequestDto req,
             [FromRoute] int categoryId
         )
         {
             try
             {
-                if (
-                    string.IsNullOrWhiteSpace(dto.Name) &&
-                    string.IsNullOrWhiteSpace(dto.Description) &&
-                    !dto.NumberOfProducts.HasValue
-                )
-                {
-                    throw new BadRequestException("At least one field must have value.");
-                }
+                var res = await _service.UpdateCategory(req, categoryId);
 
-                _repository.UpdateCategory(dto, categoryId);
-
-                return new ApiResponse<Category>
-                {
-                    Success = true,
-                    Message = "Category successfully updated.",
-                    Data = null
-                };
-            }
-            catch(BadRequestException ex)
-            {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
-            }
-            catch (NotFoundException ex)
-            {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
+                return !res.Success ?
+                    GetActionResultError(res) : 
+                    Ok(res);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
             }
         }
         #endregion
 
         #region DeleteRequest
         [HttpDelete("delete-category/{categoryId:int}")]
-        public ApiResponse<Category> DeleteCategory([FromRoute] int categoryId)
+        [Authorize(Roles = "Inventory")]
+        public async Task<IActionResult> DeleteCategory([FromRoute] int categoryId)
         {
             try
             {
-                _repository.DeleteCategory(categoryId);
+                var res = await _service.DeleteCategory(categoryId);
 
-                return new ApiResponse<Category>
-                {
-                    Success = true,
-                    Data = null,
-                    Message = "Category Successfully Deleted."
-                };
-            }
-            catch (NotFoundException ex)
-            {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
+                return !res.Success ?
+                    GetActionResultError(res) :
+                    Ok(res);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
             }
         }
         #endregion

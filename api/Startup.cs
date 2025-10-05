@@ -1,4 +1,5 @@
 ﻿using api.Infrastructure;
+using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -76,8 +77,17 @@ namespace api
                 )
             );
 
+            this._services.AddApiVersioning(options =>
+            {
+                options.ReportApiVersions = true;
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+            });
+
             this.ConfigureOtherServices();
             this.ConfigureAuth();
+
+            this._services.AddAuthorization();
         }
 
         public void ConfigureApplication(IApplicationBuilder app, IWebHostEnvironment env)

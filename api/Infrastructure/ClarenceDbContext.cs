@@ -1,6 +1,5 @@
 using System;
 using api.Infrastructure.Model;
-using Microsoft.EntityFrameworkCore;
 
 namespace api.Infrastructure;
 

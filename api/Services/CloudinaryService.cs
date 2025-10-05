@@ -2,7 +2,7 @@
 using CloudinaryDotNet.Actions;
 using Microsoft.Extensions.Options;
 using api.Configurations;
-using api.Interfaces;
+using api.Interfaces.Services;
 
 namespace api.Services
 {
@@ -10,8 +10,9 @@ namespace api.Services
     {
         private readonly Cloudinary _cloudinary;
         private readonly CloudinaryConfig _config;
+        private readonly ILogger<CloudinaryService> _logger;
 
-        public CloudinaryService(IOptions<CloudinaryConfig> options)
+        public CloudinaryService(IOptions<CloudinaryConfig> options, ILogger<CloudinaryService> logger)
         {
             this._config = options.Value;
 
@@ -25,25 +26,38 @@ namespace api.Services
             cloudinary.Api.Secure = true;
 
             this._cloudinary = cloudinary;
+            this._logger = logger;
         }
 
 
-        public async Task<bool> Upload(IFormFile file)
+        public async Task<string?> UploadImageAsync(IFormFile file)
         {
             try
             {
-                var uploadParams = new ImageUploadParams()
+                await using var stream = file.OpenReadStream();
+
+                var uploadParams = new ImageUploadParams
                 {
-                    // File = new FileDescription(file.Pat)
+                    File = new FileDescription(file.FileName, stream),
+                    Folder = "xclone",
+                    UseFilename = true,
+                    UniqueFilename = true,
+                    Overwrite = false,
                 };
-                var uploadResult = await this._cloudinary.UploadAsync(uploadParams);
-                
-                return true;
+
+                var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+                if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return uploadResult.SecureUrl.ToString();
+                }
+
+                return null;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                return false;
+                Console.WriteLine($"Cloudinary upload failed: {e.Message}");
+                return null;
             }
         }
     }

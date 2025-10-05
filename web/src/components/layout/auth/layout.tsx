@@ -1,30 +1,35 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
-import { useAuth } from '../../../contexts/auth.context'
+import useAuth from '@/hooks/useAuth';
 import { AnimatedGridPattern } from '../../ui/animated-grid-pattern';
 import { cn } from '@/utils/cn';
 import GradientText from '../../ui/gradient-text';
 import { Toaster } from '../../ui/sonner';
 import { protectedRoutes, unprotectedRoutes } from '@/config/routes';
+import { useUserStore } from '@/stores/useUserStore';
 
 const AuthLayout: React.FC = () => {
 
-  const { isAuthenticated } = useAuth();
+  const { validateToken } = useAuth();
+  const { user } = useUserStore();
+  const isAuthenticated = !!user;
 
-  const location = useLocation()
-  const navigate = useNavigate()
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Determines where to redirect after login/authenticated
-  const from = location.state?.from?.pathname || protectedRoutes.ROOT 
+  const from = location.state?.from?.pathname || protectedRoutes.ROOT;
 
   useEffect(() => {
-    // if (isAuthenticated) {
-    //   navigate(from, { replace: true })
-    // } else 
-    if (location.pathname === unprotectedRoutes.ROOT) {
-      navigate(unprotectedRoutes.LOGIN, { replace: true })
+    validateToken();
+  }, [validateToken]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    } else if (location.pathname === unprotectedRoutes.ROOT) {
+      navigate(unprotectedRoutes.LOGIN, { replace: true });
     }
-  }, [isAuthenticated, navigate, from, location])
+  }, [isAuthenticated, navigate, from, location.pathname]);
 
   return (
     <>
@@ -65,7 +70,7 @@ const AuthLayout: React.FC = () => {
       <Toaster
         richColors={true}
         position="bottom-right"
-        duration={1500}
+        duration={3000}
         closeButton
       />
     </>

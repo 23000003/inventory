@@ -1,161 +1,166 @@
 using api.Dto;
 using api.Exceptions;
 using api.Helpers;
-using api.Infrastructure.Interfaces;
 using api.Infrastructure.Model;
+using api.Interfaces.Repositories;
+using api.Interfaces.Services;
+using Asp.Versioning;
 using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 
 namespace api.Controllers
 {
-    [Route("api/products")]
+    [Authorize]
     [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/products")]
     [Produces("application/json")]
-    public class ProductsController : ControllerBase
+    public class ProductsController : BaseController
     {
-        private readonly IProductRepository _repository;
+        private readonly IProductService _service;
         private readonly ILogger<ProductsController> _logger;
         public ProductsController(
-            IProductRepository repository,
+            IProductService service,
             ILogger<ProductsController> logger
         )
         {
             _logger = logger;
-            _repository = repository;
+            _service = service;
         }
 
-        #region GetRequest
+        #region Get Request
         [HttpGet]
-        public ApiResponse<IEnumerable<Product>> GetAllProducts(
+        [Authorize(Roles = "Inventory,Sales")]
+        public async Task<IActionResult> GetAllProducts(
             [FromQuery] Pagination pagination,
             [FromQuery] ProductFilterRequestDto filter
         )
         {
             try
             {
-                var data = _repository.GetAllProducts(pagination, filter);
+                var res = await _service.GetAllProducts(pagination, filter);
 
-                return new ApiResponse<IEnumerable<Product>>
-                {
-                    Data = data,
-                    Success = true,
-                    Pagination = data.PaginationDetails
-                };
+                return !res.Success ? GetActionResultError(res) : Ok(res);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new Exception(ex.Message);
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
             }
         }
 
         [HttpGet("{productId:int}")]
-        public IActionResult GetProduct([FromRoute] int productId)
-        {
-            var data = _repository.GetProduct(productId);
-            if (data == null)
-            {
-                return NotFound("Product not found");
-            }
-            return Ok(data);
-        }
-        #endregion
-
-        #region PostRequest
-        [HttpPost("create-product")]
-        public ApiResponse<Product> CreateProduct([FromBody] ProductCreateRequestDto dto)
+        [Authorize(Roles = "Inventory,Sales")]
+        public async Task<IActionResult> GetProduct([FromRoute] int productId)
         {
             try
             {
-                _repository.CreateProduct(dto);
-                return new ApiResponse<Product>
-                {
-                    Data = null,
-                    Message = "Product created successfully",
-                    Success = true,
-                };
+                var res = await _service.GetProductById(productId);
+
+                return !res.Success ? GetActionResultError(res) : Ok(res);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new Exception(ex.Message);
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
+            }
+            
+        }
+        #endregion
+
+        #region Post Request
+        [HttpPost("create-product")]
+        [Authorize(Roles = "Inventory")]
+        public async Task<IActionResult> CreateProduct([FromForm] ProductCreateRequestDto req)
+        {
+            try
+            {
+                var res = await _service.CreateProduct(req);
+
+                return !res.Success ? GetActionResultError(res) : Ok(res);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
+            }
+        }
+
+        [HttpPost("create-products-bulk")]
+        [Authorize(Roles = "Inventory")]
+        public async Task<IActionResult> CreateProductsBulk([FromForm] List<ProductCreateRequestDto> req)
+        {
+            try
+            {
+                var res = await _service.CreateProductRange(req);
+
+                return !res.Success ? GetActionResultError(res) : Ok(res);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
             }
         }
         #endregion
 
-        #region PatchRequest
-        [HttpPatch("update-product/{productId:int}")]
-        public ApiResponse<Product> UpdateProduct(
-            [FromBody] ProductRequestUpdateDto dto,
+        #region Update Request
+        [HttpPut("update-product/{productId:int}")]
+        [Authorize(Roles = "Inventory")]
+        public async Task<IActionResult> UpdateProduct(
+            [FromBody] ProductRequestUpdateDto req,
             [FromRoute] int productId
         )
         {
             try
             {
-                if (
-                    string.IsNullOrWhiteSpace(dto.Name) &&
-                    string.IsNullOrWhiteSpace(dto.Description) &&
-                    // !dto.Image &&
-                    !dto.Price.HasValue &&
-                    !dto.Quantity.HasValue &&
-                    !dto.CategoryId.HasValue
-                )
-                {
-                    throw new BadRequestException("At least one field should have a value.");
-                }
+                var res = await _service.UpdateProduct(req, productId);
 
-                _repository.UpdateProduct(dto, productId);
+                return !res.Success ? GetActionResultError(res) : Ok(res);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
+            }
+        }
 
-                return new ApiResponse<Product>
-                {
-                    Data = null,
-                    Success = true,
-                    Message = "Product updated successfully."
-                };
-            }
-            catch (NotFoundException ex)
+        [HttpPatch("update-quantity-bulk")]
+        [Authorize(Roles = "Sales")]
+        public async Task<IActionResult> UpdateProductQuantity([FromBody] List<ProductRequestQuantityUpdateDto> req)
+        {
+            try
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
-            }
-            catch (BadRequestException ex)
-            {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new BadRequestException(ex.Message);
+                var res = await _service.UpdateProductQuantity(req);
+
+                return !res.Success ? GetActionResultError(res) : Ok(res);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new Exception(ex.Message);
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
             }
         }
         #endregion
 
-        #region DeleteRequest
+        #region Delete Request
+        [Authorize(Roles = "Inventory")]
         [HttpDelete("delete-product/{productId:int}")]
-        public ApiResponse<Product> DeleteProduct([FromRoute] int productId)
+        public async Task<IActionResult> DeleteProduct([FromRoute] int productId)
         {
             try
             {
-                _repository.DeleteProduct(productId);
+                var res = await _service.DeleteProduct(productId);
 
-                return new ApiResponse<Product>
-                {
-                    Data = null,
-                    Message = "Product deleted successfully.",
-                    Success = true,
-                };
-            }
-            catch (NotFoundException ex)
-            {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new NotFoundException(ex.Message);
+                return !res.Success ? GetActionResultError(res) : Ok(res);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception: {ErrorMessage}", ex.Message);
-                throw new Exception(ex.Message);
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
             }
         }
         #endregion

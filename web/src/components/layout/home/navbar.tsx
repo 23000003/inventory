@@ -1,6 +1,6 @@
 import GradientText from "@/components/ui/gradient-text";
 import { protectedRoutes, unprotectedRoutes } from "@/config/routes";
-import { useAuth } from "@/contexts/auth.context";
+import useAuth from "@/hooks/useAuth";
 import { Link, useLocation, useNavigate } from "react-router";
 
 const HomeNavbar: React.FC = () => {

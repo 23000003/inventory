@@ -4,11 +4,11 @@ import HomeLayout from "./components/layout/home/layout"
 import Login from "./pages/login"
 import { protectedRoutes, unprotectedRoutes } from "./config/routes"
 import Inventory from "./pages/inventory"
-import CreateItem from "./pages/create-item"
 import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
+import CreateProducts from "./pages/create-product"
 
 function App() {
 
@@ -23,7 +23,7 @@ function App() {
           </Route>
           <Route path={protectedRoutes.ROOT} element={<HomeLayout />}>
             <Route path={protectedRoutes.INVENTORY} element={<Inventory />} />
-            <Route path={protectedRoutes.CREATE_ITEM} element={<CreateItem />} />
+            <Route path={protectedRoutes.CREATE_ITEM} element={<CreateProducts />} />
           </Route>
         </Routes>
       </HashRouter>

@@ -13,7 +13,7 @@ namespace api.Dto
         [ModelBinder(Name = "description")]
         public string Description { get; set; } = string.Empty;
 
-        [Range(0.001, 1000)]
+        [Range(0.001, 10000000)]
         [ModelBinder(Name = "price")]
         public float Price { get; set; }
 
@@ -36,14 +36,17 @@ namespace api.Dto
 
     public class ProductFilterRequestDto
     {
-        [ModelBinder(Name = "price")]
-        public float? Price { get; set; }
+        [ModelBinder(Name = "price-range")]
+        public string? PriceRange { get; set; }
 
-        [ModelBinder(Name = "quantity")]
-        public int? Quantity { get; set; }
+        [ModelBinder(Name = "category")]
+        public string? Category { get; set; }
 
-        [ModelBinder(Name = "is_descending")]
-        public bool IsDecending { get; set; } = false;
+        [ModelBinder(Name = "sort-by")]
+        public string? SortBy { get; set; }
+
+        [ModelBinder(Name = "search")]
+        public string? Search { get; set; }
     }
 
     public class ProductRequestUpdateDto
@@ -55,7 +58,7 @@ namespace api.Dto
         public string? Description { get; set; }
 
         [ModelBinder(Name = "price")]
-        [Range(0.001, 1000)] 
+        [Range(0.001, 10000000)] 
         public float? Price { get; set; }
 
         [ModelBinder(Name = "quantity")]
@@ -68,4 +71,15 @@ namespace api.Dto
         public int? CategoryId { get; set; }
     }
 
+    public class ProductRequestQuantityUpdateDto
+    {
+        [ModelBinder(Name = "id")]
+        public int Id { get; set; }
+
+        [ModelBinder(Name = "name")]
+        public string Name { get; set; } = string.Empty;
+
+        [ModelBinder(Name = "quantity")]
+        public int Quantity { get; set; }
+    }
 }

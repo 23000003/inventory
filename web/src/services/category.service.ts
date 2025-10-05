@@ -1,12 +1,12 @@
 import { api } from "@/config/axios";
 import type { CategorySchemaType } from "@/schemas/category.schema";
-import type { ApiResponse } from "@/types/api-response";
+import type { PaginatedApiResponse } from "@/types/api-response";
 
 const BASE_URL = `/category`;
 
 const CategoryService = {
-  getAll: () => // apply pagination
-    api.get<ApiResponse<CategorySchemaType[]>>(`${BASE_URL}`),
+  getAll: async (query: string | undefined) =>
+    api.get<PaginatedApiResponse<CategorySchemaType[]>>(`${BASE_URL}${query ? `?${query}` : ""}`),
 };
 
 export default CategoryService;

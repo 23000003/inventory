@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Query;
 
 namespace api.Helpers
 {
-    public class PagedList<T> : List<T>
+    public class PaginatedList<T> : List<T>
     {
         public PaginationDetails PaginationDetails { get; private set; }
 
-        public PagedList(List<T> items, int count, int pageNumber, int pageSize)
+        public PaginatedList(List<T> items, int count, int pageNumber, int pageSize)
         {
             PaginationDetails = new PaginationDetails
             {
@@ -20,14 +20,14 @@ namespace api.Helpers
             };
             AddRange(items);
         }
-        public static PagedList<T> ToPagedList(IOrderedQueryable<T> source, int pageNumber, int pageSize)
+        public static PaginatedList<T> ToPagedList(IOrderedQueryable<T> source, int pageNumber, int pageSize)
         {
             var count = source.Count();
             var items = source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
-            return new PagedList<T>(items, count, pageNumber, pageSize);
+            return new PaginatedList<T>(items, count, pageNumber, pageSize);
         }
 
-        public static async Task<PagedList<T>> ToPagedListAsync(IOrderedQueryable<T> source, int pageNumber, int pageSize)
+        public static async Task<PaginatedList<T>> ToPagedListAsync(IOrderedQueryable<T> source, int pageNumber, int pageSize)
         {
             var count = source.Provider is IAsyncQueryProvider
                 ? await source.CountAsync()
@@ -37,7 +37,7 @@ namespace api.Helpers
                                     .Take(pageSize)
                                     .ToListAsync();
 
-            return new PagedList<T>(items, count, pageNumber, pageSize);
+            return new PaginatedList<T>(items, count, pageNumber, pageSize);
         }
     }
 }

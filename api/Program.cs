@@ -1,9 +1,5 @@
+global using Microsoft.EntityFrameworkCore;
 using api;
-using api.Infrastructure;
-using api.Infrastructure.Interfaces;
-using api.Infrastructure.Repository;
-using Microsoft.EntityFrameworkCore;
-using System.Reflection.PortableExecutable;
 using Serilog;
 using Serilog.Events;
 

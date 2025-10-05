@@ -1,7 +1,7 @@
 ﻿using api.Configurations;
-using api.Infrastructure.Interfaces;
 using api.Infrastructure.Repository;
-using api.Interfaces;
+using api.Interfaces.Repositories;
+using api.Interfaces.Services;
 using api.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -18,10 +18,16 @@ namespace api
             //services
             this._services.AddScoped<ITokenService, TokenService>();
             this._services.AddScoped<ICloudinaryService, CloudinaryService>();
+            this._services.AddScoped<ICategoryService, CategoryService>();
+            this._services.AddScoped<IProductService, ProductService>();
             
             // repositories
             this._services.AddScoped<ICategoryRepository, CategoryRepository>();
             this._services.AddScoped<IProductRepository, ProductRepository>();
+            this._services.AddScoped<ICategoryRepository, CategoryRepository>();
+
+            // automapper
+            this._services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         }
     }
 }

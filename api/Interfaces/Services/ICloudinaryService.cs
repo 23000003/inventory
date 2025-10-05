@@ -1,9 +1,9 @@
 using System;
 using CloudinaryDotNet.Actions;
 
-namespace api.Interfaces;
+namespace api.Interfaces.Services;
 
 public interface ICloudinaryService
 {
-    Task<bool> Upload(IFormFile file);
+    Task<string?> UploadImageAsync(IFormFile file);
 }

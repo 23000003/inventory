@@ -7,6 +7,6 @@ export type ProductType = {
 export type ProductFilter = {
   category?: string[];
   priceRange?: string[];
-  searchTerm?: string;
+  search?: string;
   sortBy?: string;
 }

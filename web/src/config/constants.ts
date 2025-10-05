@@ -1,1 +1,0 @@
-export const JWT_LOCAL_STORAGE_KEY = "__jwt_token__";

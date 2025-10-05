@@ -1,24 +1,22 @@
 import { Outlet, useLocation, useNavigate } from "react-router"
-import { useAuth } from "../../../contexts/auth.context";
 import { Toaster } from "../../ui/sonner";
 import { AnimatedGridPattern } from "../../ui/animated-grid-pattern";
 import { cn } from "@/utils/cn";
 import HomeNavbar from "./navbar";
-import { useEffect } from "react";
 import { protectedRoutes } from "@/config/routes";
+import useAuth from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const HomeLayout: React.FC = () =>{ 
 
-  const { isAuthenticated } = useAuth();
+  const { validateToken } = useAuth();
+
+  useEffect(() => {
+    validateToken();
+  }, [validateToken]);
 
   const navigate = useNavigate();
   const location = useLocation();
-
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     navigate("/login", { replace: true })
-  //   }
-  // }, [isAuthenticated, navigate])
 
   if(location.pathname === protectedRoutes.ROOT) {
     navigate(protectedRoutes.INVENTORY);
@@ -43,13 +41,13 @@ const HomeLayout: React.FC = () =>{
     <main className='flex flex-row p-10 justify-center'>
       <Outlet />
     </main>
-    <footer className='flex items-center justify-center'>
+    <footer className='flex items-center justify-center py-4'>
       <span className='text-sm text-gray-500'>&copy; 2025 Kenny. All rights reserved.</span>
     </footer>
     <Toaster
       richColors={true}
       position="bottom-right"
-      duration={1500}
+      duration={3000}
       closeButton
     />
   </>

@@ -1,22 +1,24 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import InventoryHeader from "@/components/inventory/inventory-header";
 import FilterSidebar from "@/components/inventory/filter-sidebar";
 import ProductCard from "@/components/inventory/product-card";
-
 import type { ProductFilter } from "@/types/product";
-import useInventory from "@/hooks/useInventory";
-import Pagination from "@/components/Pagination";
+import Pagination from "@/components/pagination";
 import type { PaginationType } from "@/types/pagination";
+import useGetProducts from "@/hooks/products/useGetProducts";
+import useGetCategories from "@/hooks/categories/useGetCategories";
+
+const VIEW_MODE = "grid";
 
 const Inventory = () => {
   const [params, setSearchParams] = useSearchParams();
-  
+
   const searchParams : PaginationType & ProductFilter = useMemo(
     () => ({
       page: parseInt(params.get("page-number") ?? "1"),
       pageSize: parseInt(params.get("page-size") ?? "8"),
-      searchTerm: params.get("search-term") ?? "",
+      search: params.get("search") ?? "",
       priceRange: params.get("price-range")?.split(",") ?? [],
       sortBy: params.get("sort-by") ?? "",
       category: params.get("category")?.split(",") ?? [],
@@ -24,34 +26,110 @@ const Inventory = () => {
     [params],
   );
 
-  const { allProducts, allCategories, isLoading} = useInventory(
+  const { 
+    data: allProducts, 
+    isLoading: productLoading, 
+    error: productError 
+  } = useGetProducts(
     searchParams
   );
 
-  const handlePageAndSizeChange = useCallback((value: string) => {
-    // setSearchParams({ page-number: })
-  }, [])
-  
-  if(isLoading) return <h1>Loading...</h1>;
+  console.log("All Products:", allProducts);
 
-  const viewMode = "grid";
+  const { 
+    data: allCategories, 
+    isLoading: categoryLoading, 
+    error: categoryError 
+  } = useGetCategories();
+
+  const handleSidebarFilterChange = useCallback((newFilters: ProductFilter) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      Object.entries(newFilters).forEach(([key, value]) => {
+        // convert camelCase to kebab-case
+        const kebabKey = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(); 
+        if (Array.isArray(value)) {
+          if (value.length) {
+            newParams.set(kebabKey, value.join(","));
+          } else {
+            newParams.delete(kebabKey);
+          }
+        } else if (value) {
+          newParams.set(kebabKey, value);
+        } else {
+          newParams.delete(kebabKey);
+        }
+      });
+      newParams.set("page-number", "1");
+      return newParams;
+    });
+  }, [setSearchParams]);
+
+  const handlePageAndSizeChange = useCallback((
+    type: "page" | "size", 
+    value: number
+  ) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (type === "page") {
+        newParams.set("page-number", value.toString());
+      } else {
+        newParams.set("page-size", value.toString());
+      }
+      return newParams;
+    });
+  }, [setSearchParams]);
+
+  const handleSortChange = useCallback((sortBy: string) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+        if (sortBy) {
+          newParams.set("sort-by", sortBy);
+        }
+      return newParams;
+    });
+  }, [setSearchParams]);
+
+  const handleSearch = useCallback((value: string) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (value.trim()) {
+        newParams.set("search", value);
+      } else {
+        newParams.delete("search");
+      }
+      newParams.set("page-number", "1");
+      return newParams;
+    });
+  }, [setSearchParams]);
+
+  if(productLoading || categoryLoading) return <h1>Loading...</h1>;
+  if(productError || categoryError) return <h1>Error loading products or categories</h1>;
 
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <InventoryHeader
+          totalCount={allProducts?.pagination?.totalCount || 0}
+          pageSize={allProducts?.pagination?.pageSize || 0}
+          handleSortChange={handleSortChange}
+          handleDebouncedSearch={handleSearch}
         />
-
         <div className="flex gap-8 mt-8">
           <aside className="hidden lg:block flex-shrink-0">
             <FilterSidebar 
               allCategories={allCategories}
+              handleSidebarFilterChange={handleSidebarFilterChange}
+              currentFilters={{
+                category: searchParams.category,
+                priceRange: searchParams.priceRange,
+                search: searchParams.search,
+                sortBy: searchParams.sortBy
+              }}
             />
           </aside>
-
           {/* Display products */}
-          <div className="flex-1 max-w-600 w-600">
+          <div className="flex-1 w-[400px] sm:max-w-600 sm:w-600">
             {allProducts?.data?.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
@@ -66,19 +144,24 @@ const Inventory = () => {
               <>
                 <div
                   className={`grid gap-6 ${
-                    viewMode === "grid"
-                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    VIEW_MODE === "grid"
+                      ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
                       : "grid-cols-1"
                   }`}
                 >
                   {allProducts?.data?.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard 
+                      key={product.id} 
+                      product={product} 
+                      categories={allCategories ?? []}
+                    />
                   ))}
                 </div>
 
                 {allProducts?.pagination ? (
                   <Pagination
                     {...allProducts?.pagination}
+                    handlePageAndSizeChange={handlePageAndSizeChange}
                   />
                 ): null}
               </>

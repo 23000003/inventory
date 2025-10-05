@@ -7,7 +7,7 @@ export type PaginationDetails = {
     pageNumber: number;
     totalPages: number;
     pageSize: number;
-    totalPageSize: number;
+    totalCount: number;
     hasPrevious: boolean;
     hasNext: boolean;
 };

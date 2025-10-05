@@ -1,12 +1,12 @@
+import { api } from "@/config/axios";
 import type { LoginSchemaType } from "@/schemas/login.schema";
+import type { ApiResponse } from "@/types/api-response";
 
-export class AuthService {
-  static async login(data: LoginSchemaType) {
-    try {
-      console.log(data);
-    } catch (error) {
-      console.error(error);
-      throw new Error("Login failed");
-    }
-  }
-}
+const BASE_URL = `/auth`;
+
+const AuthService = {
+  loginUser: async (data: LoginSchemaType) =>
+    api.post<ApiResponse<string>>(`${BASE_URL}/login`, data),
+};
+
+export default AuthService;

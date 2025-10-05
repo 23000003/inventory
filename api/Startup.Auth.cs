@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace api
 {
@@ -28,7 +29,27 @@ namespace api
                     ValidAudience = this._configuration["JwtToken:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
                         System.Text.Encoding.UTF8.GetBytes(this._configuration["JwtToken:Secret"])
-                    )
+                    ),
+                    RoleClaimType = ClaimTypes.Role
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnChallenge = context =>
+                    {
+                        context.HandleResponse();
+
+                        context.Response.StatusCode = 401;
+                        context.Response.ContentType = "application/json";
+
+                        var response = new
+                        {
+                            message = "Unauthorized access.",
+                            error = "You need a valid token to access this resource."
+                        };
+
+                        return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+                    }
                 };
             });
 

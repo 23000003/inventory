@@ -2,10 +2,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using api.Interfaces;
 using Microsoft.CodeAnalysis.Options;
 using api.Configurations;
 using Microsoft.Extensions.Options;
+using api.Interfaces.Services;
+using api.Infrastructure.Model;
 
 namespace api.Services
 {
@@ -18,7 +19,7 @@ namespace api.Services
             _jwtConfig = options.Value;
         }
 
-        public string GenerateToken(string username)
+        public string GenerateToken(User user)
         {
             var issuer = _jwtConfig.Issuer;
             var audience = _jwtConfig.Audience;
@@ -30,7 +31,9 @@ namespace api.Services
 
             var claims = new[]
             {
-                new Claim("username", username)
+                new Claim("username", user.Username),
+                new Claim("id", user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.Role),
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor

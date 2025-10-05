@@ -1,39 +1,61 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using api.Helpers;
 using api.Infrastructure.Model;
-using api.Interfaces;
+using api.Interfaces.Services;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using static api.Helpers.ErrorResource;
 
 namespace api.Controllers
 {
-    [Route("api/auth")]
     [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/auth")]
     [Produces("application/json")]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
         private readonly List<User> _users = new List<User>()
         {
-            new User { Username = "Kenny123", Password = "password123" },
-            new User { Username = "Yosep", Password = "qwerty" },
-            new User { Username = "Clarence", Password = "abc123" }
+            new User { Id = 1, Username = "Kenny123", Password = "password123", Role = Roles.Inventory },
+            new User { Id = 2, Username = "Yosep", Password = "password123", Role = Roles.Sales },
+            new User { Id = 3, Username = "Clarence", Password = "password123", Role = Roles.Sales }
         };
         private readonly ITokenService _tokenService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(ITokenService tokenService)
+        public AuthController(ITokenService tokenService, ILogger<AuthController> logger)
         {
             _tokenService = tokenService;
+            _logger = logger;
         }
 
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] User user)
+        public IActionResult Login([FromBody] Login user)
         {
-            if(_users.Any(u => u.Username == user.Username && u.Password == user.Password))
+            try
             {
-                var token = _tokenService.GenerateToken(user.Username);
-                return Ok(new { token });
-            }
+                var matchedUser = _users.FirstOrDefault(
+                    u => u.Username == user.Username && 
+                    u.Password == user.Password
+                );
 
-            return NotFound("Invalid Credentials");
+                if (matchedUser != null)
+                {
+                    var token = _tokenService.GenerateToken(matchedUser);
+                    var successResponse = ApiResponse<string>.SuccessResponse(token, "Login successful");
+                    return Ok(successResponse);
+                }
+
+                var errorResponse = ApiResponse<string>.NotFound("User");
+
+                return GetActionResultError(errorResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
+            }
         }
 
     }

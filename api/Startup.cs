@@ -97,6 +97,12 @@ namespace api
             // seed db
             this.SeedApplication(app);
 
+            var webSocketOptions = new WebSocketOptions
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120)
+            };
+            app.UseWebSockets(webSocketOptions);
+
             if (env.IsDevelopment())
             {
                 app.UseSwagger();

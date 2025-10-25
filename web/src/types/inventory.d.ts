@@ -13,5 +13,7 @@ export enum InventorySortByRequest {
 
 export enum InventoryProductActions {
   EDIT = "edit",
-  VIEW = "view"
+  VIEW = "view",
+  DELETE = "delete",
+  CREATE = "create",
 }

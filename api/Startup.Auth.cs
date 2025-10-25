@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.Security.Claims;
 
 namespace api
@@ -35,6 +36,23 @@ namespace api
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        var path = context.HttpContext.Request.Path;
+
+                        if (path.StartsWithSegments("/api/v1/products/listen-product-quantity"))
+                        {
+                            var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+
+                            if (!string.IsNullOrEmpty(accessToken))
+                            {
+                                context.Token = accessToken;
+                            }
+                        }
+
+                        return Task.CompletedTask;
+                    },
+
                     OnChallenge = context =>
                     {
                         context.HandleResponse();

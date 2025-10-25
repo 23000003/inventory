@@ -19,14 +19,12 @@ namespace api.Infrastructure.Repository
         public async Task AddAsync(T entity)
         {
             await _context.Set<T>().AddAsync(entity);
-            await _context.SaveChangesAsync();
         }
 
         public async Task AddRangeAsync(IEnumerable<T> entities)
         {
             var addRangeAsync = entities.ToList();
             await _context.Set<T>().AddRangeAsync(addRangeAsync);
-            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(T entity)
@@ -36,7 +34,6 @@ namespace api.Infrastructure.Repository
 
             _context.Entry(entity).State = EntityState.Modified;
             
-            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateRangeAsync(IEnumerable<T> entities)
@@ -48,7 +45,6 @@ namespace api.Infrastructure.Repository
 
                 _context.Entry(entity).State = EntityState.Modified;
             }
-            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -58,9 +54,12 @@ namespace api.Infrastructure.Repository
 
             _context.Set<T>().Remove(entity);
 
-            await _context.SaveChangesAsync();
-
             return true;
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await  _context.SaveChangesAsync();
         }
 
         public async Task ExecuteInTransactionAsync(Func<Task> operation)
@@ -69,12 +68,13 @@ namespace api.Infrastructure.Repository
             try
             {
                 await operation();
+                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
-            catch(Exception ex)
+            catch
             {
                 await transaction.RollbackAsync();
-                throw new Exception(ex.Message);
+                throw;
             }
         }
     }

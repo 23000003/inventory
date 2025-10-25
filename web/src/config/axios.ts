@@ -1,7 +1,7 @@
 import { ACCESS_TOKEN_KEY } from "@/utils/token-storage";
 import axios from "axios";
 
-const URL = "https://localhost:7092/api/v1";
+const URL = "http://localhost:5249/api/v1";
 
 export const api = axios.create({
   baseURL: URL,

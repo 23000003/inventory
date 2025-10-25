@@ -8,6 +8,8 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 import type { CategorySchemaType } from "@/schemas/category.schema";
 import type { ProductFilter } from "@/types/product";
 // import { mockCategories } from "@/data/inventory";
+import { Plus } from "lucide-react";
+import ViewCategories from "./categories-modal";
 
 type Props = {
   allCategories: CategorySchemaType[] | undefined;
@@ -36,6 +38,7 @@ const FilterSidebar: React.FC<Readonly<Props>> = ({
 }) => {
   const [showAllPrices, setShowAllPrices] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const visiblePriceRanges = showAllPrices ? priceRanges : priceRanges.slice(0, 3);
   const visibleCategories = showAllCategories ? allCategories : allCategories?.slice(0, 4);
@@ -160,8 +163,16 @@ const FilterSidebar: React.FC<Readonly<Props>> = ({
       </Card>
 
       <Card className="bg-white border-filter-border">
-        <CardHeader>
+        <CardHeader className="flex items-center justify-between">
           <CardTitle className="text-lg">Categories</CardTitle>
+          <Button 
+            onClick={() => setIsModalOpen(true)} 
+            variant="ghost" 
+            size="sm" 
+            className="p-0 w-8 h-8 rounded-full justify-center cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
           {visibleCategories?.map((category) => {
@@ -216,6 +227,13 @@ const FilterSidebar: React.FC<Readonly<Props>> = ({
           )}
         </CardContent>
       </Card>
+      {isModalOpen ? (
+        <ViewCategories
+          isModalOpen={isModalOpen}
+          setIsModalOpen={setIsModalOpen}
+          categories={allCategories || []}
+        />
+      ) : null}
     </div>
   );
 };

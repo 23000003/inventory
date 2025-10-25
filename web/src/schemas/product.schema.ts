@@ -5,7 +5,7 @@ export const ProductSchema = z.object({
   name: z.string(),
   description: z.string(),
   price: z.number(),
-  quantity: z.string(),
+  quantity: z.number(),
   image: z.string(),
   createdBy: z.string(),
   createdDate: z.coerce
@@ -61,7 +61,7 @@ export const CreateProductSchema = z.object({
       { message: "Created by is required." }
     ),
   image: z.instanceof(File)
-    .refine((file) => file.size > 0, "Image is required"),
+    .optional(),
 });
 
 export type ProductSchemaType = z.infer<typeof ProductSchema>;

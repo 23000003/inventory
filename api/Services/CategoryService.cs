@@ -13,16 +13,19 @@ namespace api.Services
         private readonly ICategoryRepository _repository;
         private readonly IMapper _mapper;
         private readonly ILogger<CategoryService> _logger;
+        private readonly IProductRepository _productRepository;
 
         public CategoryService(
             ICategoryRepository repository, 
             IMapper mapper, 
-            ILogger<CategoryService> logger
+            ILogger<CategoryService> logger,
+            IProductRepository productRepository
         )
         {
             _repository = repository;
             _mapper = mapper;
             _logger = logger;
+            _productRepository = productRepository;
         }
 
         public async Task<ApiResponse<IEnumerable<Category>>> GetAllCategory(Pagination pagination)
@@ -58,7 +61,12 @@ namespace api.Services
                     );
                 }
 
+                newCategory.Description = "dwa";
+                newCategory.NumberOfProducts = 0;
+                newCategory.CreatedDate = DateTime.UtcNow;
+
                 await _repository.AddAsync(newCategory);
+                await _repository.SaveChangesAsync();
                 return ApiResponse<bool>.SuccessResponse(true);
             }
             catch (Exception ex)
@@ -84,8 +92,31 @@ namespace api.Services
                 old.NumberOfProducts = categoryDto.NumberOfProducts ?? old.NumberOfProducts;
 
                 await _repository.UpdateAsync(old);
+                await _repository.SaveChangesAsync();
 
                 return ApiResponse<bool>.SuccessResponse(true);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<ApiResponse<Category>> UpdateCategoryNumberOfProducts(int id, int num)
+        {
+            try
+            {
+                var category = await _repository.GetByIdAsync(id);
+
+                if (category == null)
+                    return ApiResponse<Category>.NotFound(
+                        ErrorResource.RESOURCE_NOT_FOUND_WITH_ID("Category", id.ToString())
+                    );
+
+                category.NumberOfProducts += num;
+                await _repository.UpdateAsync(category);
+
+                return ApiResponse<Category>.SuccessResponse(category);
             }
             catch (Exception ex)
             {
@@ -97,11 +128,26 @@ namespace api.Services
         {
             try
             {
-                return await _repository.DeleteAsync(id) ?
-                    ApiResponse<bool>.SuccessResponse(true) :
-                    ApiResponse<bool>.NotFound(
+                var category = await _repository.GetByIdAsync(id, true);
+                if (category == null)
+                    return ApiResponse<bool>.NotFound(
                         ErrorResource.RESOURCE_NOT_FOUND_WITH_ID("Category", id.ToString())
                     );
+
+                await _repository.ExecuteInTransactionAsync(async () =>
+                {
+                    var products = _productRepository.GetQueryable()
+                        .Where(p => p.CategoryId == category.Id)
+                        .ToList();
+
+                    foreach (var product in products)
+                    {
+                        await _productRepository.DeleteAsync(product.Id);
+                    }
+                    await _repository.DeleteAsync(category.Id);
+                });
+                
+                return ApiResponse<bool>.SuccessResponse(true);
             }
             catch (Exception ex)
             {

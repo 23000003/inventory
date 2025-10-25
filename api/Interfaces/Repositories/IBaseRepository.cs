@@ -11,5 +11,6 @@
         Task UpdateRangeAsync(IEnumerable<T> entities);
         Task<bool> DeleteAsync(int id);
         Task ExecuteInTransactionAsync(Func<Task> operation);
+        Task SaveChangesAsync();
     }
 }

@@ -17,14 +17,6 @@ namespace api.Dto
         [Required, MaxLength(50)]
         [ModelBinder(Name = "name")]
         public string Name { get; set; } = string.Empty;
-
-        [Required, MaxLength(100)]
-        [ModelBinder(Name = "description")]
-        public string Description { get; set; } = string.Empty;
-
-        [Required] 
-        [ModelBinder(Name = "number_of_products")]
-        public int NumberOfProducts { get; set; }
         
         [Required]
         [ModelBinder(Name = "created_by")]

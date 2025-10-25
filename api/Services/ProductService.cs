@@ -16,18 +16,24 @@ namespace api.Services
         private readonly ILogger<ProductService> _logger;
         private readonly IMapper _mapper;
         private readonly ICloudinaryService _cloudinaryService;
+        private readonly ICategoryService _categoryService;
+        private readonly WebSocketHelperManager _websocketManager;
 
         public ProductService(
-            IProductRepository repository, 
-            ILogger<ProductService> logger, 
+            IProductRepository repository,
+            ILogger<ProductService> logger,
             IMapper mapper,
-            ICloudinaryService cloudinaryService
+            ICloudinaryService cloudinaryService,
+            ICategoryService categoryService,
+            WebSocketHelperManager websocketManager
         )
         {
             _logger = logger;
             _mapper = mapper;
             _repository = repository;
+            _websocketManager = websocketManager;
             _cloudinaryService = cloudinaryService;
+            _categoryService = categoryService;
         }
 
         #region Get Product
@@ -93,6 +99,25 @@ namespace api.Services
             }
         }
 
+        public async Task<ApiResponse<IEnumerable<Product>>> GetOutOfStockProducts()
+        {
+            try
+            {
+                var query = _repository.GetQueryable();
+
+                query = query.Where(p => p.Quantity == 0);
+
+                return ApiResponse<IEnumerable<Product>>.SuccessResponse(
+                    await query.ToListAsync(),
+                    pagi: null
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<ApiResponse<Product>> GetProductById(int id)
         {
             try
@@ -146,6 +171,7 @@ namespace api.Services
                 newProduct.Image = imageUrl;
 
                 await _repository.AddAsync(newProduct);
+                await _repository.SaveChangesAsync();
                 return ApiResponse<bool>.SuccessResponse(true);
             }
             catch (Exception ex)
@@ -246,6 +272,7 @@ namespace api.Services
                 }
 
                 await _repository.UpdateAsync(oldProduct);
+                await _repository.SaveChangesAsync();
 
                 return ApiResponse<bool>.SuccessResponse(true);
             }
@@ -291,6 +318,7 @@ namespace api.Services
                     await _repository.UpdateRangeAsync(oldProducts);
                 });
 
+                await _websocketManager.BroadcastAsync("out-of-stock-products-quantity");
                 return ApiResponse<bool>.SuccessResponse(true);
             }
             catch (Exception ex)
@@ -303,24 +331,37 @@ namespace api.Services
         #region Delete Product
         public async Task<ApiResponse<bool>> DeleteProduct(int id)
         {
+            var oldProduct = await _repository.GetByIdAsync(id);
+            
+            if (oldProduct == null)
+                return ApiResponse<bool>.NotFound(
+                    ErrorResource.RESOURCE_NOT_FOUND_WITH_ID("Product", id.ToString())
+                );
+
             try
             {
-                var oldProduct = await _repository.GetByIdAsync(id);
+                await _repository.ExecuteInTransactionAsync(async () =>
+                {
+                    var updateCategory = new CategoryUpdateRequestDto
+                    {
+                        NumberOfProducts = -1
+                    };
 
-                if (oldProduct == null)
-                    return ApiResponse<bool>.NotFound(
-                        ErrorResource.RESOURCE_NOT_FOUND_WITH_ID("Product", id.ToString())
-                    );
+                    var categoryUpdated = await _categoryService.UpdateCategoryNumberOfProducts(oldProduct.CategoryId, -1);
+                    if (!categoryUpdated.Success)
+                        throw new Exception("Error updating category product count");
 
-                await _repository.DeleteAsync(id);
+                    await _repository.DeleteAsync(id);
+                });
 
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                return ApiResponse<bool>.BadRequest(ex.Message);
             }
         }
+
         #endregion
 
     }

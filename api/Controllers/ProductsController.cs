@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
+using System.Net.WebSockets;
+using System.Text;
 
 namespace api.Controllers
 {
@@ -67,7 +69,24 @@ namespace api.Controllers
                 _logger.LogError(ex.Message);
                 return StatusCode(500);
             }
-            
+
+        }
+
+        [HttpGet("out-of-stock")]
+        [Authorize(Roles = "Inventory,Sales")]
+        public async Task<IActionResult> GetOutOfStockProducts()
+        {
+            try
+            {
+                var res = await _service.GetOutOfStockProducts();
+
+                return !res.Success ? GetActionResultError(res) : Ok(res);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(500);
+            }
         }
         #endregion
 
@@ -111,7 +130,7 @@ namespace api.Controllers
         [HttpPut("update-product/{productId:int}")]
         [Authorize(Roles = "Inventory")]
         public async Task<IActionResult> UpdateProduct(
-            [FromBody] ProductRequestUpdateDto req,
+            [FromForm] ProductRequestUpdateDto req,
             [FromRoute] int productId
         )
         {
@@ -161,6 +180,34 @@ namespace api.Controllers
             {
                 _logger.LogError(ex.Message);
                 return StatusCode(500);
+            }
+        }
+        #endregion
+
+        #region Websocket
+        [HttpGet("listen-product-quantity")]
+        // [Authorize(Roles = "Sales,Inventory")]
+        public async Task ListenProductQuantityChanges([FromServices] WebSocketHelperManager manager)
+        {
+            if (HttpContext.WebSockets.IsWebSocketRequest)
+            {
+                using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+                var socketId = manager.AddSocket(webSocket);
+
+                var buffer = new byte[1024 * 4];
+                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+                while (!result.CloseStatus.HasValue)
+                {
+                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                }
+
+                await manager.RemoveSocket(socketId);
+                await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+            }
+            else
+            {
+                HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             }
         }
         #endregion

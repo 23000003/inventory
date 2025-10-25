@@ -16,4 +16,10 @@ export const CategorySchema = z.object({
   // Products: z.array(ProductSchema),
 });
 
+export const CreateCategorySchema = z.object({
+  name: z.string().min(1, { message: "Category name is required." }),
+  created_by: z.string().min(1, { message: "Created by is required." }),
+});
+
+export type CreateCategorySchemaType = z.infer<typeof CreateCategorySchema>;
 export type CategorySchemaType = z.infer<typeof CategorySchema>;

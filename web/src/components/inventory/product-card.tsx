@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Pencil, Eye } from "lucide-react";
+import { ShoppingCart, Pencil, Eye, Trash } from "lucide-react";
 import React, { useState } from "react";
 import type { ProductSchemaType } from "@/schemas/product.schema";
 import ProductModal from "./product-modal";
@@ -23,7 +23,7 @@ const ProductCard: React.FC<Props> = ({
   const [editedProduct, setEditedProduct] = useState(product);
 
   const getStockStatus = () => {
-    const qty = parseInt(product.quantity);
+    const qty = product.quantity;
     if (qty === 0) return { label: "Out of Stock", variant: "destructive" as const };
     if (qty < 10) return { label: "Low Stock", variant: "secondary" as const };
     return { label: "In Stock", variant: "default" as const };
@@ -75,6 +75,14 @@ const ProductCard: React.FC<Props> = ({
             >
               <Eye className="w-4 h-4" />
             </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="w-8 h-8 p-0 rounded-full shadow-lg cursor-pointer hover:bg-primary hover:text-white"
+              onClick={() => setIsModalOpen(InventoryProductActions.DELETE)}
+            >
+              <Trash className="w-4 h-4" />
+            </Button>
           </div>
 
           <div className="absolute top-3 left-3">
@@ -107,18 +115,20 @@ const ProductCard: React.FC<Props> = ({
           </div>
         </div>
       </CardContent>
-      <ProductModal
-        product={product}
-        categories={categories}
-        isEditing={isEditing}
-        imageError={imageError}
-        isModalOpen={isModalOpen}
-        setIsEditing={setIsEditing}
-        setImageError={setImageError}
-        editedProduct={editedProduct}
-        setIsModalOpen={setIsModalOpen}
-        setEditedProduct={setEditedProduct}
-      />
+      {isModalOpen && (
+        <ProductModal
+          product={product}
+          categories={categories}
+          isEditing={isEditing}
+          imageError={imageError}
+          isModalOpen={isModalOpen}
+          setIsEditing={setIsEditing}
+          setImageError={setImageError}
+          editedProduct={editedProduct}
+          setIsModalOpen={setIsModalOpen}
+          setEditedProduct={setEditedProduct}
+        />
+      )}
     </Card>
   );
 };

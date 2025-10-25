@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, Package, ShoppingCart } from "lucide-react";
 import type { CreateProductSchemaType } from "@/schemas/product.schema";
-import { mockCategories } from "@/data/inventory";
 import type { CategorySchemaType } from "@/schemas/category.schema";
+import useGetCategories from "@/hooks/categories/useGetCategories";
 
 interface CreationCartProps {
   products: CreateProductSchemaType[];
@@ -18,9 +18,15 @@ export const CreationCart = ({
   onRemoveProduct,
 }: CreationCartProps) => {
 
+  const { data: allCategories, isLoading, isError } = useGetCategories();
+
   const getCategoryName = (categoryId: number) => {
-    const category = mockCategories.find(cat => cat.id === categoryId);
+    const category = allCategories?.find(cat => cat.id === categoryId);
     return category ? category.name : "Unknown";
+  }
+
+  if(isLoading || isError) {
+    return null;
   }
 
   if (products.length === 0) {
@@ -63,7 +69,7 @@ export const CreationCart = ({
                   <div className="flex gap-3">
                     <div className="flex-shrink-0">
                       <img
-                        src={URL.createObjectURL(product.image)}
+                        src={URL.createObjectURL(product.image || new File([], "empty"))}
                         alt={product.name}
                         className="w-24 h-24 object-cover rounded-md bg-muted"
                       />

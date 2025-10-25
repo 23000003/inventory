@@ -20,7 +20,7 @@ export const createProduct = async (products: CreateProductSchemaType[]) => {
     formData.append("price", products[0].price.toString());
     formData.append("quantity", products[0].quantity.toString());
     formData.append("category_id", products[0].category_id.toString());
-    formData.append("image", products[0].image);
+    formData.append("image", products[0].image || new File([], "empty"));
     formData.append("created_by", products[0].created_by || "unknown");
 
     const { data } = await ProductService.create(formData);
@@ -34,7 +34,7 @@ export const createProduct = async (products: CreateProductSchemaType[]) => {
       formData.append(`req[${index}].price`, product.price.toString());
       formData.append(`req[${index}].quantity`, product.quantity.toString());
       formData.append(`req[${index}].category_id`, product.category_id.toString());
-      formData.append(`req[${index}].image`, product.image);
+      formData.append(`req[${index}].image`, product.image || new File([], "empty"));
       formData.append(`req[${index}].created_by`, product.created_by);
     });
     

@@ -9,6 +9,7 @@ namespace api.Interfaces.Services
         Task<ApiResponse<IEnumerable<Category>>> GetAllCategory(Pagination pagination);
         Task<ApiResponse<bool>> CreateCategory(CategoryCreateRequestDto categoryDto);
         Task<ApiResponse<bool>> UpdateCategory(CategoryUpdateRequestDto categoryDto, int id);
+        Task<ApiResponse<Category>> UpdateCategoryNumberOfProducts(int id, int num);
         Task<ApiResponse<bool>> DeleteCategory(int id);
     }
 }

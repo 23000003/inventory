@@ -6,6 +6,7 @@ import HomeNavbar from "./navbar";
 import { protectedRoutes } from "@/config/routes";
 import useAuth from "@/hooks/useAuth";
 import { useEffect } from "react";
+import ChatRoom from "@/components/chat-room";
 
 const HomeLayout: React.FC = () =>{ 
 
@@ -25,7 +26,7 @@ const HomeLayout: React.FC = () =>{
   return (
     <>
     <div className="fixed -z-10 flex h-svh w-full items-center justify-center overflow-hidden rounded-lg p-20">
-    <AnimatedGridPattern
+      <AnimatedGridPattern
         width={60}
         height={60}
         opacity={.40}
@@ -44,6 +45,7 @@ const HomeLayout: React.FC = () =>{
     <footer className='flex items-center justify-center py-4'>
       <span className='text-sm text-gray-500'>&copy; 2025 Kenny. All rights reserved.</span>
     </footer>
+    <ChatRoom />
     <Toaster
       richColors={true}
       position="bottom-right"

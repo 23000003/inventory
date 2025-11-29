@@ -2,10 +2,10 @@ import GradientText from "@/components/ui/gradient-text";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { protectedRoutes, unprotectedRoutes } from "@/config/routes";
 import useGetOutOfStock from "@/hooks/products/useGetOutOfStock";
-import useQuantityListener from "@/hooks/products/useQuantityListener";
 import useAuth from "@/hooks/useAuth";
 import { Bell } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router";
+import useWebsocket from "@/hooks/useWebsocket";
 
 const HomeNavbar: React.FC = () => {
 
@@ -14,7 +14,13 @@ const HomeNavbar: React.FC = () => {
   const { clearAuth } = useAuth();
 
   const { data: outOfStocks } = useGetOutOfStock();
-  useQuantityListener();
+  
+  useWebsocket<string>({
+    url: "/products/listen-product-quantity",
+    method: {
+      name: "invalidate"
+    }
+  });
   
   const highlightPath = (path: string) => {
     if(location.pathname === path) {

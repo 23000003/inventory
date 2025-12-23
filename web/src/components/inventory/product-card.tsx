@@ -40,8 +40,7 @@ const ProductCard: React.FC<Props> = ({
               src={product.image}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              onError={(error) => {
-                console.log("Image failed to load:", error);
+              onError={() => {
                 setImageError(true);
               }}
             />

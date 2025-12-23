@@ -19,7 +19,8 @@ const HomeNavbar: React.FC = () => {
     url: "/products/listen-product-quantity",
     method: {
       name: "invalidate"
-    }
+    },
+    listen: true
   });
   
   const highlightPath = (path: string) => {

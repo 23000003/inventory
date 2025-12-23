@@ -22,12 +22,7 @@ public class ChatMessagesRepository : BaseRepository<ChatMessages>, IChatMessage
 
   public override async Task<IEnumerable<ChatMessages>> GetAllAsync(bool includeRelated = false)
   {
-      return includeRelated 
-          ? await _context.ChatMessages
-              .ToListAsync() 
-          : await _context.ChatMessages
-              .Include(c => c.ChatRoom)
-              .ToListAsync();
+      throw new NotImplementedException();
   }
 
   public override async Task<ChatMessages?> GetByIdAsync(int id, bool includeRelated = false)

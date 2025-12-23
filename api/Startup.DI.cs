@@ -23,11 +23,15 @@ namespace api
             this._services.AddScoped<ICloudinaryService, CloudinaryService>();
             this._services.AddScoped<ICategoryService, CategoryService>();
             this._services.AddScoped<IProductService, ProductService>();
+            this._services.AddScoped<IChatRoomService, ChatRoomService>();
+            this._services.AddScoped<IChatMessagesService, ChatMessagesServices>();
             
             // repositories
             this._services.AddScoped<ICategoryRepository, CategoryRepository>();
             this._services.AddScoped<IProductRepository, ProductRepository>();
             this._services.AddScoped<ICategoryRepository, CategoryRepository>();
+            this._services.AddScoped<IChatRoomRepository, ChatRoomRepository>();
+            this._services.AddScoped<IChatMessagesRepository, ChatMessagesRepository>();
 
             // automapper
             this._services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

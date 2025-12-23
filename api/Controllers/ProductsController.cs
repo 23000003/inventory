@@ -15,7 +15,6 @@ using System.Text;
 
 namespace api.Controllers
 {
-    [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/products")]
@@ -186,28 +185,37 @@ namespace api.Controllers
 
         #region Websocket
         [HttpGet("listen-product-quantity")]
+        [AllowAnonymous]
         // [Authorize(Roles = "Sales,Inventory")]
         public async Task ListenProductQuantityChanges([FromServices] WebSocketHelperManager manager)
         {
-            if (HttpContext.WebSockets.IsWebSocketRequest)
-            {
-                using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-                var socketId = manager.AddSocket(webSocket);
+            Console.WriteLine("Listening to product quantity changes...");
 
-                var buffer = new byte[1024 * 4];
-                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-
-                while (!result.CloseStatus.HasValue)
-                {
-                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                }
-
-                await manager.RemoveSocket(socketId);
-                await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-            }
-            else
+            if (!HttpContext.WebSockets.IsWebSocketRequest)
             {
                 HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
+            }
+            var id = Guid.NewGuid().ToString();
+
+            using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            manager.AddSocket(webSocket, id);
+
+            var buffer = new byte[128];
+
+            try
+            {
+                while (webSocket.State == WebSocketState.Open)
+                {
+                    var result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
+
+                    if (result.MessageType == WebSocketMessageType.Close)
+                        break;
+                }
+            }
+            finally
+            {
+                await manager.RemoveSocket(id, null, null);
             }
         }
         #endregion

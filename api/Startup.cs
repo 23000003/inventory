@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
+using System.Text.Json.Serialization;
 
 namespace api                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 {
@@ -27,7 +28,10 @@ namespace api
                .ReadFrom.Services(services)
                .Enrich.FromLogContext());
 
-            this._services.AddControllers();
+            this._services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            });
             this._services.AddEndpointsApiExplorer();
             this._services.AddSwaggerGen();
 
@@ -36,7 +40,10 @@ namespace api
                     options.AddPolicy("AllowSpecificOrigin",
                         builder =>
                         {
-                            builder.WithOrigins("http://localhost:5173")
+                            builder.WithOrigins(
+                                "http://localhost:5173",
+                                "http://localhost:5174"
+                            )
                                 .AllowAnyHeader()
                                 .AllowAnyMethod()
                                 .AllowCredentials();
@@ -97,6 +104,7 @@ namespace api
             // seed db
             this.SeedApplication(app);
 
+            // WebSocket middleware must come before Authentication/Authorization
             var webSocketOptions = new WebSocketOptions
             {
                 KeepAliveInterval = TimeSpan.FromSeconds(120)
@@ -110,9 +118,9 @@ namespace api
             }
 
             app.UseCors("AllowSpecificOrigin");
+            app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseHttpsRedirection();
         }
     }
 }

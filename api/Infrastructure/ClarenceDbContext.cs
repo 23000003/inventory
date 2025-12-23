@@ -7,6 +7,7 @@ public class ClarenceDbContext : DbContext
 {
   public ClarenceDbContext(DbContextOptions<ClarenceDbContext> options) : base(options) {}
 
+  public DbSet<User> Users { get; set; }
   public DbSet<Category> Category { get; set; }
   public DbSet<Product> Products { get; set; }
   public DbSet<ChatRoom> ChatRooms { get; set; }
@@ -19,7 +20,20 @@ public class ClarenceDbContext : DbContext
       modelBuilder.Entity<ChatMessages>(e => {
         e.HasOne(e => e.ChatRoom)
           .WithMany(e => e.Messages)
-          .HasForeignKey(e => e.ChatId);
+          .HasForeignKey(e => e.RoomId);
+      });
+
+      modelBuilder.Entity<ChatRoom>(e => {
+        e.Property(e => e.InitiatorId)
+          .IsRequired();
+
+        e.HasMany(e => e.Messages)
+          .WithOne(e => e.ChatRoom)
+          .HasForeignKey(e => e.RoomId);
+
+        e.HasOne(e => e.Initiator)
+          .WithMany()
+          .HasForeignKey(e => e.InitiatorId);
       });
 
       modelBuilder.Entity<Category>(e => {

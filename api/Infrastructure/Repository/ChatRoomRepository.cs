@@ -12,6 +12,7 @@ public class ChatRoomRepository : BaseRepository<ChatRoom>, IChatRoomRepository
   {
       return includeRelated
           ? _context.ChatRooms
+              .Include(c => c.Initiator)
               .Include(c => c.Messages)
               .AsQueryable()
           : _context.ChatRooms
@@ -23,6 +24,7 @@ public class ChatRoomRepository : BaseRepository<ChatRoom>, IChatRoomRepository
       return includeRelated 
           ? await _context.ChatRooms
             .AsNoTracking()
+            .Include(c => c.Initiator)
             .Include(c => c.Messages)
             .ToListAsync() 
           : await _context.ChatRooms
@@ -30,14 +32,17 @@ public class ChatRoomRepository : BaseRepository<ChatRoom>, IChatRoomRepository
             .ToListAsync();
   }
 
-  public override async Task<ChatRooms?> GetByIdAsync(int id, bool includeRelated = false)
+  public override async Task<ChatRoom?> GetByIdAsync(int id, bool includeRelated = false)
   {
       return includeRelated
           ? await _context.ChatRooms
+              .AsNoTracking()
               .Include(c => c.Messages)
+              .Include(c => c.Initiator)
               .Where(c => c.Id == id)
               .FirstOrDefaultAsync()
           : await _context.ChatRooms
+              .AsNoTracking()
               .Where(c => c.Id == id)
               .FirstOrDefaultAsync();
   }

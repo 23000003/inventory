@@ -18,7 +18,8 @@ namespace api.Controllers
         {
             new User { Id = 1, Username = "Kenny123", Password = "password123", Role = Roles.Inventory },
             new User { Id = 2, Username = "Yosep", Password = "password123", Role = Roles.Sales },
-            new User { Id = 3, Username = "Clarence", Password = "password123", Role = Roles.Sales }
+            new User { Id = 3, Username = "Clarence", Password = "password123", Role = Roles.Sales },
+            new User { Id = 4, Username = "TestUser", Password = "password123", Role = Roles.Sales }
         };
         private readonly ITokenService _tokenService;
         private readonly ILogger<AuthController> _logger;

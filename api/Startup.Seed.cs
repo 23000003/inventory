@@ -15,10 +15,65 @@ namespace api
             // Apply migrations (if any)
             db.Database.Migrate();
 
-            if (!db.Category.Any() && !db.Products.Any())
+            if (!db.Category.Any() && !db.Products.Any() && !db.ChatRooms.Any() && !db.ChatMessages.Any() && !db.Users.Any())
             {
 
                 Log.Information("No migrations found in the database. Applying migrations...");
+
+                var _users = new List<User>()
+                {
+                    new User { Username = "Kenny123", Password = "password123", Role = Roles.Inventory },
+                    new User { Username = "Yosep", Password = "password123", Role = Roles.Sales },
+                    new User { Username = "Clarence", Password = "password123", Role = Roles.Sales },
+
+                    new User { Username = "TestUser", Password = "password123", Role = Roles.Sales }, // has messages
+
+                    new User { Username = "TestUser1", Password = "password123", Role = Roles.Sales },
+                    new User { Username = "TestUser2", Password = "password123", Role = Roles.Sales },
+                    new User { Username = "TestUser3", Password = "password123", Role = Roles.Sales },
+                    new User { Username = "TestUser4", Password = "password123", Role = Roles.Sales },
+                    new User { Username = "TestUser5", Password = "password123", Role = Roles.Sales }
+
+                };
+
+                db.Users.AddRange(_users);
+                db.SaveChanges();
+
+                var chatRooms = new List<ChatRoom>();
+
+                foreach (var user in _users.Where(u => u.Username.StartsWith("TestUser")))
+                {
+                    var chatRoom = new ChatRoom
+                    {
+                        InitiatorId = user.Id, 
+                        RoomId = Guid.NewGuid().ToString(),
+                        CreatedBy = "Seeder",
+                        CreatedDate = DateTime.UtcNow,
+                        Messages = new List<ChatMessages>()
+                    };
+
+                    chatRooms.Add(chatRoom);
+                }
+
+                db.ChatRooms.AddRange(chatRooms);
+                db.SaveChanges();
+
+                var chatMessages = new List<ChatMessages>
+                {
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = false, Message = "Hey, do you have Lebron James jersey in stock?", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = false,  Message = "And do u have medium and large sizes.", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = false, Message = "And How much is it?", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = true,  Message = "It’s $150 for the standard jersey.", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = false, Message = "Can you reserve one for me?", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = true,  Message = "Sure, which size do you want?", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = false, Message = "Medium, please.", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = true,  Message = "Medium is reserved for you now.", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = false, Message = "Thank you!", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },
+                    new() { RoomId = chatRooms[0].Id, IsInventorySender = true,  Message = "You’re welcome! Come pick it up anytime today.", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow }
+                };
+
+                db.ChatMessages.AddRange(chatMessages);
+                db.SaveChanges();
 
                 var categories = new List<Category>
                     {

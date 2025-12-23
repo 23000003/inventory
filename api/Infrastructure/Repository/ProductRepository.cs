@@ -29,12 +29,7 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
 
     public override async Task<IEnumerable<Product>> GetAllAsync(bool includeRelated = false)
     {
-        return includeRelated
-             ? await _context.Products
-                 .Include(c => c.Category)
-                 .ToListAsync()
-             : await _context.Products
-                 .ToListAsync();
+        throw new NotImplementedException();
     }
 
     public override async Task<Product?> GetByIdAsync(int id, bool includeRelated = false)

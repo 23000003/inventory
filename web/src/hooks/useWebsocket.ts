@@ -1,6 +1,7 @@
+import type { Message } from "@/types/chat";
 import { TokenStorage } from "@/utils/token-storage";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type InvalidateMethod = {
   name: "invalidate";
@@ -13,8 +14,8 @@ type ReceiveMethod<T> = {
 
 
 type Props<T> =
-  | { url: string; method: InvalidateMethod }
-  | { url: string; method: ReceiveMethod<T> };
+  | { url: string; method: InvalidateMethod; listen: boolean }
+  | { url: string; method: ReceiveMethod<T>; listen: boolean }
 
   
 const useWebsocket = <T>(props: Props<T>) => {
@@ -25,9 +26,9 @@ const useWebsocket = <T>(props: Props<T>) => {
   const token = TokenStorage.getAccessToken();
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !props.listen) return;
 
-    const rt_url = `${BASE_URL}${props.url}?access_token=${token}`;
+    const rt_url = `${BASE_URL}${props.url}`;
     const ws = new WebSocket(rt_url);
     socketRef.current = ws;
 
@@ -36,16 +37,9 @@ const useWebsocket = <T>(props: Props<T>) => {
     };
 
     ws.onmessage = (event) => {
-      console.log("Message received:", event.data);
-
-      let parsed: T;
-
-      try {
-        parsed = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-      } catch {
-        // if it's a simple string, fallback
-        parsed = event.data as T;
-      }
+      const parsed = typeof event.data === "string" 
+        ? JSON.parse(event.data) 
+        : event.data;
 
       if (props.method.name === "invalidate") {
         queryClient.invalidateQueries({
@@ -69,7 +63,27 @@ const useWebsocket = <T>(props: Props<T>) => {
         ws.close(1000, "Component unmounted");
       }
     };
-  }, [token, queryClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, queryClient, props.listen]);
+
+  const sendMessage = useCallback((message: Message) => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      try {
+        const send = {
+          message: message.message,
+          roomId: message.roomId,
+          isInventorySender: message.isInventorySender,
+        }
+        socketRef.current.send(JSON.stringify(send));
+      } catch (err) {
+        console.error("Error sending message:", err);
+      }
+    } else {
+      console.error("WebSocket is not connected. Current state:", socketRef.current?.readyState);
+    }
+  }, []);
+
+  return { sendMessage };
 };
 
 export default useWebsocket;

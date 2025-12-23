@@ -13,8 +13,6 @@ export const createProduct = async (products: CreateProductSchemaType[]) => {
 
   if(products.length === 1) {
     
-    console.log("Creating single product:", products[0]);
-
     formData.append("name", products[0].name);
     formData.append("description", products[0].description);
     formData.append("price", products[0].price.toString());
@@ -27,7 +25,6 @@ export const createProduct = async (products: CreateProductSchemaType[]) => {
     return data;
 
   } else {
-    console.log("Creating multiple products:", products);
     products.forEach((product, index) => {
       formData.append(`req[${index}].name`, product.name);
       formData.append(`req[${index}].description`, product.description);

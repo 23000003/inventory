@@ -4,10 +4,10 @@ import InventoryHeader from "@/components/inventory/inventory-header";
 import FilterSidebar from "@/components/inventory/filter-sidebar";
 import ProductCard from "@/components/inventory/product-card";
 import type { ProductFilter } from "@/types/product";
-import Pagination from "@/components/pagination";
 import type { PaginationType } from "@/types/pagination";
 import useGetProducts from "@/hooks/products/useGetProducts";
 import useGetCategories from "@/hooks/categories/useGetCategories";
+import Pagination from "@/components/Pagination";
 
 const VIEW_MODE = "grid";
 
@@ -33,8 +33,6 @@ const Inventory = () => {
   } = useGetProducts(
     searchParams
   );
-
-  console.log("All Products:", allProducts);
 
   const { 
     data: allCategories, 

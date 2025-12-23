@@ -55,6 +55,70 @@ namespace api.Migrations
                     b.ToTable("Category");
                 });
 
+            modelBuilder.Entity("api.Infrastructure.Model.ChatMessages", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsInventorySender")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RoomId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoomId");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("api.Infrastructure.Model.ChatRoom", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InitiatorId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RoomId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InitiatorId");
+
+                    b.ToTable("ChatRooms");
+                });
+
             modelBuilder.Entity("api.Infrastructure.Model.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -101,6 +165,53 @@ namespace api.Migrations
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("api.Infrastructure.Model.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("api.Infrastructure.Model.ChatMessages", b =>
+                {
+                    b.HasOne("api.Infrastructure.Model.ChatRoom", "ChatRoom")
+                        .WithMany("Messages")
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChatRoom");
+                });
+
+            modelBuilder.Entity("api.Infrastructure.Model.ChatRoom", b =>
+                {
+                    b.HasOne("api.Infrastructure.Model.User", "Initiator")
+                        .WithMany()
+                        .HasForeignKey("InitiatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Initiator");
+                });
+
             modelBuilder.Entity("api.Infrastructure.Model.Product", b =>
                 {
                     b.HasOne("api.Infrastructure.Model.Category", "Category")
@@ -115,6 +226,11 @@ namespace api.Migrations
             modelBuilder.Entity("api.Infrastructure.Model.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("api.Infrastructure.Model.ChatRoom", b =>
+                {
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

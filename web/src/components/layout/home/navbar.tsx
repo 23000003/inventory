@@ -16,7 +16,7 @@ const HomeNavbar: React.FC = () => {
   const { data: outOfStocks } = useGetOutOfStock();
   
   useWebsocket<string>({
-    url: "/products/listen-product-quantity",
+    url: "/invalidate-changes",
     method: {
       name: "invalidate"
     },

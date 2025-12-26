@@ -58,6 +58,19 @@ namespace api
                 db.ChatRooms.AddRange(chatRooms);
                 db.SaveChanges();
 
+                var tstMsgs = new List<ChatMessages>();
+
+                foreach (var room in chatRooms)
+                {
+                    if(room.Id == chatRooms[0].Id)
+                        continue;
+                    
+                    tstMsgs.Add(new ChatMessages { RoomId = room.Id, IsInventorySender = false, Message = "Hello, is anyone there?", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow });
+                }
+
+                db.ChatMessages.AddRange(tstMsgs);
+                db.SaveChanges();
+
                 var chatMessages = new List<ChatMessages>
                 {
                     new() { RoomId = chatRooms[0].Id, IsInventorySender = false, Message = "Hey, do you have Lebron James jersey in stock?", CreatedBy = "Seeder", CreatedDate = DateTime.UtcNow },

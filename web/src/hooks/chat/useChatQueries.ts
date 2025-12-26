@@ -1,15 +1,16 @@
 import ChatService from "@/services/chat.service";
 import type { PaginationType } from "@/types/pagination";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-export const GET_ALL_CHAT_ROOMS_KEY = "chatRooms";
-export const GET_ALL_ROOM_MESSAGES = "roomMessages";
+export const GET_ALL_CHAT_ROOMS_KEY = "chat-rooms";
+export const GET_ALL_ROOM_MESSAGES = "room-messages";
 
-export const useGetAllChatRooms = () => {
+export const useGetAllChatRooms = (enabled: boolean) => {
   return useQuery({
     queryKey: [GET_ALL_CHAT_ROOMS_KEY],
     queryFn: () => ChatService.getAll(""),
     select: (data) => data.data.data,
+    enabled: enabled,
   });
 };
 
@@ -17,6 +18,7 @@ export const useGetRoomMessages = (roomId: string, pagi: PaginationType) => {
   return useQuery({
     queryKey: [GET_ALL_ROOM_MESSAGES, roomId, pagi.page, pagi.pageSize],
     queryFn: () => ChatService.getRoomMessages(roomId, pagi),
+    placeholderData: keepPreviousData,
     select: (data) => data.data.data
   });
 }

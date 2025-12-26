@@ -54,10 +54,9 @@ namespace api.Services
 
                 return null;
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine($"Cloudinary upload failed: {e.Message}");
-                return null;
+                throw;
             }
         }
     }

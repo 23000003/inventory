@@ -37,7 +37,7 @@ const useWebsocket = <T>(props: Props<T>) => {
     };
 
     ws.onmessage = (event) => {
-      const parsed = typeof event.data === "string" 
+      const parsed = props.method.name === "receive" 
         ? JSON.parse(event.data) 
         : event.data;
 
@@ -64,7 +64,7 @@ const useWebsocket = <T>(props: Props<T>) => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, queryClient, props.listen]);
+  }, [token, props.listen, props.url]);
 
   const sendMessage = useCallback((message: Message) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {

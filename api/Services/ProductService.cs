@@ -93,9 +93,9 @@ namespace api.Services
                     pagedList.PaginationDetails
                 );
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
@@ -112,9 +112,9 @@ namespace api.Services
                     pagi: null
                 );
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
@@ -124,7 +124,7 @@ namespace api.Services
             {
                 var product = await _repository.GetByIdAsync(id, true);
 
-                if(product == null)
+                if (product == null)
                 {
                     return ApiResponse<Product>.NotFound(
                         ErrorResource.RESOURCE_NOT_FOUND_WITH_ID("Product", id.ToString())
@@ -133,9 +133,9 @@ namespace api.Services
 
                 return ApiResponse<Product>.SuccessResponse(product);
             }
-            catch(Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
         #endregion
@@ -146,8 +146,8 @@ namespace api.Services
             try
             {
                 var query = _repository.GetQueryable()
-                    .Where(x => 
-                        x.Name == productDto.Name && 
+                    .Where(x =>
+                        x.Name == productDto.Name &&
                         x.Description == productDto.Description
                     )
                     .FirstOrDefault();
@@ -163,7 +163,7 @@ namespace api.Services
 
                 var imageUrl = await _cloudinaryService.UploadImageAsync(productDto.Image);
 
-                if(imageUrl == null)
+                if (imageUrl == null)
                 {
                     return ApiResponse<bool>.BadRequest("Error uploading image in cloudinary");
                 }
@@ -174,9 +174,9 @@ namespace api.Services
                 await _repository.SaveChangesAsync();
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
         public async Task<ApiResponse<bool>> CreateProductRange(List<ProductCreateRequestDto> productDtos)
@@ -219,7 +219,7 @@ namespace api.Services
 
                 if (existingProducts.Count > 0)
                 {
-                    var errors = existingProducts.Select(p => 
+                    var errors = existingProducts.Select(p =>
                         ErrorResource.DATA_ALREADY_EXISTS("Product", p.Name)
                     ).ToList();
 
@@ -233,9 +233,9 @@ namespace api.Services
 
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
@@ -249,7 +249,7 @@ namespace api.Services
             {
                 var oldProduct = await _repository.GetByIdAsync(id);
 
-                if(oldProduct == null)
+                if (oldProduct == null)
                     return ApiResponse<bool>.NotFound(
                         ErrorResource.RESOURCE_NOT_FOUND_WITH_ID("Product", id.ToString())
                     );
@@ -259,7 +259,7 @@ namespace api.Services
                 oldProduct.Price = productDto.Price ?? oldProduct.Price;
                 oldProduct.Quantity = productDto.Quantity ?? oldProduct.Quantity;
 
-                if(productDto.Image != null)
+                if (productDto.Image != null)
                 {
                     var imageUrl = await _cloudinaryService.UploadImageAsync(productDto.Image);
 
@@ -276,9 +276,9 @@ namespace api.Services
 
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
@@ -292,8 +292,8 @@ namespace api.Services
                 foreach (var product in productDto)
                 {
                     var oldProduct = await _repository.GetByIdAsync(product.Id);
-                
-                    if(oldProduct == null)
+
+                    if (oldProduct == null)
                     {
                         notFoundProducts.Add(product);
                         continue;
@@ -318,12 +318,12 @@ namespace api.Services
                     await _repository.UpdateRangeAsync(oldProducts);
                 });
 
-                await _websocketManager.BroadcastAsync("out-of-stock-products-quantity");
+                await _websocketManager.BroadcastAsync(QueryClientKeys.OUT_OF_STOCK_PRODUCT_QUANTITY);
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
         #endregion
@@ -332,7 +332,7 @@ namespace api.Services
         public async Task<ApiResponse<bool>> DeleteProduct(int id)
         {
             var oldProduct = await _repository.GetByIdAsync(id);
-            
+
             if (oldProduct == null)
                 return ApiResponse<bool>.NotFound(
                     ErrorResource.RESOURCE_NOT_FOUND_WITH_ID("Product", id.ToString())
@@ -356,9 +356,9 @@ namespace api.Services
 
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch (Exception ex)
+            catch
             {
-                return ApiResponse<bool>.BadRequest(ex.Message);
+                throw;
             }
         }
 

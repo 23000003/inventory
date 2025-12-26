@@ -38,9 +38,9 @@ namespace api.Services
                     items, pagi: null
                 );
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
@@ -69,9 +69,9 @@ namespace api.Services
                 await _repository.SaveChangesAsync();
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
 
         }
@@ -96,9 +96,9 @@ namespace api.Services
 
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
@@ -118,9 +118,9 @@ namespace api.Services
 
                 return ApiResponse<Category>.SuccessResponse(category);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
@@ -149,9 +149,9 @@ namespace api.Services
                 
                 return ApiResponse<bool>.SuccessResponse(true);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
     }

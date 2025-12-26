@@ -16,11 +16,12 @@ const ChatRoom = () => {
   const scrollBottomRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedRoom, setSelectedRoom] = useState<RoomUsers | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
 
   const { user } = useUserStore();
-  const { data: chatRooms } = useGetAllChatRooms();
+  const { data: chatRooms } = useGetAllChatRooms(true);
 
   const { sendMessage } = useWebsocket<Message>({
     url: `/chat/listen-to-chat-room?roomId=${selectedRoom?.roomId}&userId=${user?.id}`,
@@ -30,25 +31,30 @@ const ChatRoom = () => {
         setMessages((prevMessages) => [...prevMessages, data]);
       }
     },
-    listen: !!selectedRoom,
+    listen: !!selectedRoom && isOpen,
   })
 
+  console.log("Is Open:", isOpen);
+
   useEffect(() => {
-    if(scrollBottomRef.current) {
-      scrollBottomRef.current.scrollIntoView();
-    }
+    // if(scrollBottomRef.current) {
+    //   scrollBottomRef.current.scrollIntoView();
+    // }
   }, [messages]);
 
   return (
     <section className="fixed bottom-5 right-5 z-50">
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button className="group relative bg-primary text-primary-foreground cursor-pointer rounded-full p-4 shadow-lg hover:shadow-xl hover:ring-3 hover:ring-border hover:ring-offset-1 hover:ring-offset-chat-header hover:opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
             <MessageCircleMore className="w-6 h-6" />
             {/* Total unread badge */}
-            <span className="absolute -top-1 -left-1 min-w-[20px] h-[20px] bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-              9
-            </span>
+            {chatRooms?.reduce((sum, room) => sum + room.unreadMessages, 0) || 0 > 0 
+              ? <span className="absolute -top-1 -left-1 min-w-[20px] h-[20px] bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                  {chatRooms?.reduce((sum, room) => sum + room.unreadMessages, 0)}
+                </span> 
+              : null
+            }
           </button>
         </PopoverTrigger>
         <PopoverContent 
@@ -61,7 +67,7 @@ const ChatRoom = () => {
             {/* User Switcher Sidebar */}
             <UserSwitcher 
               users={chatRooms || []} 
-              activeId={selectedRoom ? selectedRoom.id : -1} 
+              activeId={selectedRoom ? selectedRoom.initiatorId : -1} 
               setSelectedRoom={setSelectedRoom} 
             />
             
@@ -94,11 +100,12 @@ const ChatRoom = () => {
               <ScrollArea className="flex-1 bg-red overflow-y-auto">
                 {selectedRoom ? (
                   <ChatBubble
-                    roomId={selectedRoom.roomId} 
+                    isOpen={isOpen}
                     messages={messages}
                     setMessages={setMessages}
-                    name={selectedRoom.initiator.username}
                     scrollRef={scrollBottomRef}
+                    roomId={selectedRoom.roomId} 
+                    name={selectedRoom.initiator.username}
                   />
                 ) : (
                   <PreRoomState />
@@ -122,7 +129,7 @@ const ChatRoom = () => {
                         sendMessage({
                           message: inputValue,
                           isInventorySender: true,
-                          roomId: "-1",
+                          roomId: selectedRoom.roomId,
                           id: -1,
                           createdDate: "",
                           isRead: false
@@ -171,9 +178,9 @@ type Props = {
 const UserSwitcher = ({ users, activeId, setSelectedRoom }: Props) => (
   <div className="w-16 bg-chat-header border-r border-border flex flex-col items-center py-3 gap-2">
     <span className="text-[10px] font-medium text-muted-foreground mb-1">Chats</span>
-    {users.map((user) => (
+    {users.map((user, i) => (
       <button
-        key={user.id}
+        key={i}
         onClick={() => setSelectedRoom(user)}
         className={cn(
           "relative p-0.5 rounded-full transition-all duration-200 cursor-pointer hover:opacity-80",

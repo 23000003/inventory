@@ -66,6 +66,9 @@ public class WebSocketHelperManager
       PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    if(room.Count > 1)
+      chatDto.IsRead = true;
+
     var message = JsonSerializer.Serialize(chatDto, options);
     var buffer = Encoding.UTF8.GetBytes(message);
 

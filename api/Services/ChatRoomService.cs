@@ -11,10 +11,15 @@ namespace api.Services;
 public class ChatRoomService : IChatRoomService
 {
   private readonly IChatRoomRepository _chatRoomRepository;
+  private readonly IChatMessagesRepository _chatMessagesRepository;
 
-  public ChatRoomService(IChatRoomRepository chatRoomRepository)
+  public ChatRoomService(
+    IChatRoomRepository chatRoomRepository, 
+    IChatMessagesRepository chatMessagesRepository
+  )
   {
     _chatRoomRepository = chatRoomRepository;
+    _chatMessagesRepository = chatMessagesRepository;
   }
 
   public async Task<ApiResponse<IEnumerable<ChatRoomDto>>> GetAllChatRooms(Pagination pagination)
@@ -22,7 +27,9 @@ public class ChatRoomService : IChatRoomService
     try
     {
       var chatRooms = await _chatRoomRepository.GetQueryable(false)
-        .OrderBy(c => c.Messages.Max(m => m.CreatedDate))
+        .OrderByDescending(c =>
+          c.Messages.Max(m => (DateTime?)m.CreatedDate)
+        )
         .Select(c => new ChatRoomDto
         {
           RoomId = c.RoomId,
@@ -40,9 +47,9 @@ public class ChatRoomService : IChatRoomService
 
       return ApiResponse<IEnumerable<ChatRoomDto>>.SuccessResponse(chatRooms);
     }
-    catch (Exception ex)
+    catch
     {
-      throw new Exception(ex.Message);
+      throw;
     }
   }
 
@@ -67,9 +74,9 @@ public class ChatRoomService : IChatRoomService
 
       return ApiResponse<ChatRoomDto>.SuccessResponse(chatRoom!);
     }
-    catch (Exception ex)
+    catch
     {
-      throw new Exception(ex.Message);
+      throw;
     }
   }
   public async Task<ApiResponse<ChatRoomDto>> GetChatRoomByInitiatorId(int initiatorId, Pagination pagination)
@@ -81,7 +88,7 @@ public class ChatRoomService : IChatRoomService
 
       if (!chatroom)
         return ApiResponse<ChatRoomDto>.SuccessResponse(null!);
-      
+
       var chatRoom = await ChatRoomQueryBuilder(pagination)
         .Where(c => c.InitiatorId == initiatorId)
         .FirstOrDefaultAsync();
@@ -92,9 +99,9 @@ public class ChatRoomService : IChatRoomService
 
       return ApiResponse<ChatRoomDto>.SuccessResponse(chatRoom!);
     }
-    catch (Exception ex)
+    catch
     {
-      throw new Exception(ex.Message);
+      throw;
     }
   }
 

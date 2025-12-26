@@ -182,42 +182,5 @@ namespace api.Controllers
             }
         }
         #endregion
-
-        #region Websocket
-        [HttpGet("listen-product-quantity")]
-        [AllowAnonymous]
-        // [Authorize(Roles = "Sales,Inventory")]
-        public async Task ListenProductQuantityChanges([FromServices] WebSocketHelperManager manager)
-        {
-            Console.WriteLine("Listening to product quantity changes...");
-
-            if (!HttpContext.WebSockets.IsWebSocketRequest)
-            {
-                HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-                return;
-            }
-            var id = Guid.NewGuid().ToString();
-
-            using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            manager.AddSocket(webSocket, id);
-
-            var buffer = new byte[128];
-
-            try
-            {
-                while (webSocket.State == WebSocketState.Open)
-                {
-                    var result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
-
-                    if (result.MessageType == WebSocketMessageType.Close)
-                        break;
-                }
-            }
-            finally
-            {
-                await manager.RemoveSocket(id, null, null);
-            }
-        }
-        #endregion
     }
 }

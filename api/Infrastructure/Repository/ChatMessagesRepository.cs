@@ -36,4 +36,25 @@ public class ChatMessagesRepository : BaseRepository<ChatMessages>, IChatMessage
               .Where(c => c.Id == id)
               .FirstOrDefaultAsync();
   }
+
+  public async Task<bool> MarkMessagesAsRead(int chatRoomId, bool isInventory)
+  {
+    var messages = await _context.ChatMessages
+      .Where(m => 
+        m.RoomId == chatRoomId && 
+        m.IsInventorySender != isInventory && 
+        !m.IsRead
+      )
+      .ToListAsync();
+
+    if(messages.Count == 0)
+      return false;
+
+    foreach (var message in messages)
+      message.IsRead = true;
+
+    await _context.SaveChangesAsync();
+
+    return true;
+  }
 }

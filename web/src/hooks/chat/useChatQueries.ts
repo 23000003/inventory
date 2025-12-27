@@ -17,7 +17,14 @@ export const useGetAllChatRooms = (enabled: boolean) => {
 export const useGetRoomMessages = (roomId: string, pagi: PaginationType) => {
   return useQuery({
     queryKey: [GET_ALL_ROOM_MESSAGES, roomId, pagi.page, pagi.pageSize],
-    queryFn: () => ChatService.getRoomMessages(roomId, pagi),
+    queryFn: async () => {
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+      return await ChatService.getRoomMessages(roomId, pagi);
+    },
+    gcTime: 0,
+    staleTime: 0,
+    refetchOnMount: "always", 
+    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
     select: (data) => data.data.data
   });

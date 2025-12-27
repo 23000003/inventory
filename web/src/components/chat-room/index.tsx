@@ -3,17 +3,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { cn } from "@/utils/cn";
 import { Input } from "../ui/input";
-import { ScrollArea } from "../ui/scroll-area";
 import type { Message, RoomUsers } from "@/types/chat";
 import { useGetAllChatRooms } from "@/hooks/chat/useChatQueries";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import useWebsocket from "@/hooks/useWebsocket";
 import { useUserStore } from "@/stores/useUserStore";
 import ChatBubble from "./chat-bubble";
 
 const ChatRoom = () => {
-
-  const scrollBottomRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedRoom, setSelectedRoom] = useState<RoomUsers | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -34,13 +31,9 @@ const ChatRoom = () => {
     listen: !!selectedRoom && isOpen,
   })
 
-  console.log("Is Open:", isOpen);
-
   useEffect(() => {
-    // if(scrollBottomRef.current) {
-    //   scrollBottomRef.current.scrollIntoView();
-    // }
-  }, [messages]);
+    if(!isOpen) setMessages([])
+  }, [isOpen])
 
   return (
     <section className="fixed bottom-5 right-5 z-50">
@@ -97,20 +90,20 @@ const ChatRoom = () => {
               )}
 
               {/* Messages Area */}
-              <ScrollArea className="flex-1 bg-red overflow-y-auto">
+              <div className="flex-1 bg-red overflow-y-auto">
                 {selectedRoom ? (
                   <ChatBubble
                     isOpen={isOpen}
                     messages={messages}
                     setMessages={setMessages}
-                    scrollRef={scrollBottomRef}
+                    // scrollRef={scrollBottomRef}
                     roomId={selectedRoom.roomId} 
                     name={selectedRoom.initiator.username}
                   />
                 ) : (
                   <PreRoomState />
                 )}
-              </ScrollArea>
+              </div>
 
               {/* Input Area */}
               {selectedRoom ? (

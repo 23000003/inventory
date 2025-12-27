@@ -18,7 +18,7 @@ namespace api
             if (!db.Category.Any() && !db.Products.Any() && !db.ChatRooms.Any() && !db.ChatMessages.Any() && !db.Users.Any())
             {
 
-                Log.Information("No migrations found in the database. Applying migrations...");
+                Log.Information("No data found in the database. Applying mock data...");
 
                 var _users = new List<User>()
                 {
@@ -168,7 +168,7 @@ namespace api
             }
             else
             {
-                Log.Information("Migrations already applied. Skipping database migration.");
+                Log.Information("Mock data already applied. Skipping data seeding.");
             }
         }
     }

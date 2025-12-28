@@ -13,6 +13,7 @@ namespace api.Services
     {
 
         private readonly IProductRepository _repository;
+        private readonly ICategoryRepository _categoryRepository;
         private readonly ILogger<ProductService> _logger;
         private readonly IMapper _mapper;
         private readonly ICloudinaryService _cloudinaryService;
@@ -21,6 +22,7 @@ namespace api.Services
 
         public ProductService(
             IProductRepository repository,
+            ICategoryRepository categoryRepository,
             ILogger<ProductService> logger,
             IMapper mapper,
             ICloudinaryService cloudinaryService,
@@ -31,6 +33,7 @@ namespace api.Services
             _logger = logger;
             _mapper = mapper;
             _repository = repository;
+            _categoryRepository = categoryRepository;
             _websocketManager = websocketManager;
             _cloudinaryService = cloudinaryService;
             _categoryService = categoryService;
@@ -60,7 +63,8 @@ namespace api.Services
 
                 if (!string.IsNullOrEmpty(filter.Category))
                 {
-                    query = query.Where(p => p.Category.Name == filter.Category);
+                    var categories = filter.Category.Split(',');
+                    query = query.Where(p => categories.Contains(p.Category.Name));
                 }
 
                 if (!string.IsNullOrEmpty(filter.Search))
@@ -168,9 +172,13 @@ namespace api.Services
                     return ApiResponse<bool>.BadRequest("Error uploading image in cloudinary");
                 }
 
+                var category = await _categoryRepository.GetByIdAsync(productDto.CategoryId);
+                category!.NumberOfProducts += 1;
+
                 newProduct.Image = imageUrl;
 
                 await _repository.AddAsync(newProduct);
+                await _categoryRepository.UpdateAsync(category);
                 await _repository.SaveChangesAsync();
                 return ApiResponse<bool>.SuccessResponse(true);
             }
@@ -179,13 +187,14 @@ namespace api.Services
                 throw;
             }
         }
-        public async Task<ApiResponse<bool>> CreateProductRange(List<ProductCreateRequestDto> productDtos)
+        public async Task<ApiResponse<bool>> CreateProductBulk(List<ProductCreateRequestDto> productDtos)
         {
             try
             {
                 var products = _mapper.Map<IEnumerable<Product>>(productDtos);
 
                 var existingProducts = new List<Product>();
+                var existingCategories = new List<Category>();
 
                 var query = _repository.GetQueryable();
 
@@ -202,17 +211,23 @@ namespace api.Services
                         continue;
                     }
 
-                    var getImageFile = productDtos.Where(x =>
+                    var getImageFile = productDtos.FirstOrDefault(x =>
                         x.Name == product.Name &&
                         x.Description == product.Description
-                    ).FirstOrDefault();
+                    );
 
-                    var imageUrl = await _cloudinaryService.UploadImageAsync(getImageFile.Image);
+                    var imageUrl = await _cloudinaryService.UploadImageAsync(getImageFile!.Image);
 
                     if (imageUrl == null)
                     {
                         return ApiResponse<bool>.BadRequest("Error uploading image in cloudinary");
                     }
+
+                    var category = await _categoryRepository.GetByIdAsync(product.CategoryId);
+
+                    category!.NumberOfProducts += 1;
+
+                    existingCategories.Add(category);
 
                     product.Image = imageUrl;
                 }
@@ -229,6 +244,7 @@ namespace api.Services
                 await _repository.ExecuteInTransactionAsync(async () =>
                 {
                     await _repository.AddRangeAsync(products);
+                    await _categoryRepository.UpdateRangeAsync(existingCategories);
                 });
 
                 return ApiResponse<bool>.SuccessResponse(true);
@@ -255,9 +271,15 @@ namespace api.Services
                     );
 
                 oldProduct.Name = productDto.Name ?? oldProduct.Name;
-                oldProduct.Description = productDto.Description ?? oldProduct.Description;
                 oldProduct.Price = productDto.Price ?? oldProduct.Price;
                 oldProduct.Quantity = productDto.Quantity ?? oldProduct.Quantity;
+                oldProduct.Description = productDto.Description ?? oldProduct.Description;
+
+                if (oldProduct.CategoryId != productDto.CategoryId && productDto.CategoryId != null)
+                {
+                    var decreaseOldCategory = await _categoryService.UpdateCategoryNumberOfProducts(oldProduct.CategoryId, -1);
+                    oldProduct.CategoryId = productDto.CategoryId ?? oldProduct.CategoryId;
+                }
 
                 if (productDto.Image != null)
                 {

@@ -5,6 +5,7 @@ using api.Infrastructure.Model;
 using api.Interfaces.Repositories;
 using api.Interfaces.Services;
 using AutoMapper;
+using Newtonsoft.Json;
 
 namespace api.Services;
 
@@ -26,7 +27,7 @@ public class ChatRoomService : IChatRoomService
   {
     try
     {
-      var chatRooms = await _chatRoomRepository.GetQueryable(false)
+      var chatRooms = _chatRoomRepository.GetQueryable(false)
         .OrderByDescending(c =>
           c.Messages.Max(m => (DateTime?)m.CreatedDate)
         )
@@ -40,12 +41,18 @@ public class ChatRoomService : IChatRoomService
             Username = c.Initiator.Username
           },
           UnreadMessages = c.Messages.Count(m => !m.IsRead && !m.IsInventorySender)
-        })
-        .Skip((pagination.PageNumber - 1) * pagination.PageSize)
-        .Take(pagination.PageSize)
-        .ToListAsync();
+        });
 
-      return ApiResponse<IEnumerable<ChatRoomDto>>.SuccessResponse(chatRooms);
+      var toPagedList = await PaginatedList<ChatRoomDto>.ToPagedListAsync(
+        (IOrderedQueryable<ChatRoomDto>)chatRooms,
+        pagination.PageNumber,
+        pagination.PageSize
+      );
+
+      return ApiResponse<IEnumerable<ChatRoomDto>>.SuccessResponse(
+        toPagedList,
+        pagi: toPagedList.PaginationDetails
+      );
     }
     catch
     {

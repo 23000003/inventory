@@ -1,24 +1,38 @@
-import { MessageCircleMore, MessageSquare, Send } from "lucide-react";
+import { MessageCircleMore, MessageSquare, Plus, Send } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { cn } from "@/utils/cn";
 import { Input } from "../ui/input";
 import type { Message, RoomUsers } from "@/types/chat";
-import { useGetAllChatRooms } from "@/hooks/chat/useChatQueries";
+import { GET_ALL_CHAT_ROOMS_KEY, useGetAllChatRooms } from "@/hooks/chat/useChatQueries";
 import { useEffect, useState } from "react";
 import useWebsocket from "@/hooks/useWebsocket";
 import { useUserStore } from "@/stores/useUserStore";
 import ChatBubble from "./chat-bubble";
+import type { PaginationDetails, PaginationType } from "@/types/pagination.d";
+import { ScrollArea } from "../ui/scroll-area";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ChatRoom = () => {
+  
+  const queryClient = useQueryClient();
 
   const [selectedRoom, setSelectedRoom] = useState<RoomUsers | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [pagination, setPagination] = useState<PaginationType>({
+    page: 1,
+    pageSize: 5,
+  })
 
   const { user } = useUserStore();
-  const { data: chatRooms } = useGetAllChatRooms(true);
+
+  const { 
+    chatRooms, 
+    paginationDetails
+  } = useGetAllChatRooms(pagination);
+
 
   const { sendMessage } = useWebsocket<Message>({
     url: `/chat/listen-to-chat-room?roomId=${selectedRoom?.roomId}&userId=${user?.id}`,
@@ -34,6 +48,11 @@ const ChatRoom = () => {
   useEffect(() => {
     if(!isOpen) setMessages([])
   }, [isOpen])
+  
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: [GET_ALL_CHAT_ROOMS_KEY] })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination])
 
   return (
     <section className="fixed bottom-5 right-5 z-50">
@@ -58,11 +77,18 @@ const ChatRoom = () => {
         >
           <div className="flex h-[480px]">
             {/* User Switcher Sidebar */}
-            <UserSwitcher 
-              users={chatRooms || []} 
-              activeId={selectedRoom ? selectedRoom.initiatorId : -1} 
-              setSelectedRoom={setSelectedRoom} 
-            />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-medium text-muted-foreground border-r text-center pt-3">
+                Chats
+              </span>
+              <UserSwitcher 
+                users={chatRooms || []} 
+                activeId={selectedRoom ? selectedRoom.initiatorId : -1} 
+                setSelectedRoom={setSelectedRoom} 
+                pagination={paginationDetails}
+                setPagination={setPagination}
+              />
+            </div>
             
             {/* Main Chat Area */}
             <div className="flex-1 flex flex-col">
@@ -165,36 +191,62 @@ const PreRoomState = () => (
 type Props = {
   users: RoomUsers[];
   activeId: number;
+  pagination: PaginationDetails | undefined;
+  setPagination: React.Dispatch<React.SetStateAction<PaginationType>>;
   setSelectedRoom: React.Dispatch<React.SetStateAction<RoomUsers | null>>;
 }
 
-const UserSwitcher = ({ users, activeId, setSelectedRoom }: Props) => (
-  <div className="w-16 bg-chat-header border-r border-border flex flex-col items-center py-3 gap-2">
-    <span className="text-[10px] font-medium text-muted-foreground mb-1">Chats</span>
-    {users.map((user, i) => (
-      <button
-        key={i}
-        onClick={() => setSelectedRoom(user)}
-        className={cn(
-          "relative p-0.5 rounded-full transition-all duration-200 cursor-pointer hover:opacity-80",
-          activeId === user.initiatorId 
-            ? "ring-2 ring-primary ring-offset-2 ring-offset-chat-header" 
-            : "hover:ring-2 hover:ring-border hover:ring-offset-1 hover:ring-offset-chat-header"
-        )}
-      >
-        <Avatar className="h-9 w-9">
-          <AvatarImage src={``} />
-          <AvatarFallback className="bg-[#4079ff] text-white text-xs font-bold">
-            {user.initiator.username[0].toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        {/* Unread badge */}
-        {user.unreadMessages > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-destructive text-destructive-foreground text-[10px] text-white font-bold rounded-full flex items-center justify-center px-1">
-            {user.unreadMessages}
-          </span>
-        )}
-      </button>
-    ))}
-  </div>
-);
+const UserSwitcher = ({ users, activeId, setSelectedRoom, pagination, setPagination }: Props) => {
+
+  return (
+    <ScrollArea className="h-full [&_[data-slot='scroll-area-scrollbar']]:hidden overflow-y-auto border-r border-border scrollbar-hide">
+      <div className="w-16 bg-chat-header flex flex-col items-center py-3 gap-2">
+        {users.map((user, i) => (
+          <button
+            key={i}
+            onClick={() => setSelectedRoom(user)}
+            className={cn(
+              "relative p-0.5 rounded-full transition-all duration-200 cursor-pointer hover:opacity-80",
+              activeId === user.initiatorId 
+                ? "ring-2 ring-primary ring-offset-2 ring-offset-chat-header" 
+                : "hover:ring-2 hover:ring-border hover:ring-offset-1 hover:ring-offset-chat-header"
+            )}
+          >
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={``} />
+              <AvatarFallback className="bg-[#4079ff] text-white text-xs font-bold">
+                {user.initiator.username[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {/* Unread badge */}
+            {user.unreadMessages > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-destructive text-destructive-foreground text-[10px] text-white font-bold rounded-full flex items-center justify-center px-1">
+                {user.unreadMessages}
+              </span>
+            )}
+          </button>
+        ))}
+        {pagination !== undefined && pagination.hasNext ? (
+          <button
+            onClick={() => 
+                setPagination((prev) => ({
+                  ...prev,
+                  pageSize: prev.pageSize + 5,
+                }))
+            }
+            className={cn(
+              "relative p-0.5 rounded-full transition-all duration-200 cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-border hover:ring-offset-1 hover:ring-offset-chat-header",
+            )}
+          >
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={``} />
+              <AvatarFallback className="bg-primary text-white text-xs font-bold">
+                <Plus className="h-4 w-4 inline-block" />
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        ) : null}
+      </div>
+    </ScrollArea>
+  )
+}

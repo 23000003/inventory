@@ -5,13 +5,18 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 export const GET_ALL_CHAT_ROOMS_KEY = "chat-rooms";
 export const GET_ALL_ROOM_MESSAGES = "room-messages";
 
-export const useGetAllChatRooms = (enabled: boolean) => {
-  return useQuery({
+export const useGetAllChatRooms = (pagination: PaginationType) => {
+  const { data, isPending } = useQuery({
     queryKey: [GET_ALL_CHAT_ROOMS_KEY],
-    queryFn: () => ChatService.getAll(""),
-    select: (data) => data.data.data,
-    enabled: enabled,
+    queryFn: () => ChatService.getAll(pagination),
+    select: (data) => data.data
   });
+
+  return {
+    chatRooms: data?.data,
+    paginationDetails: data?.pagination,
+    isPending,
+  }
 };
 
 export const useGetRoomMessages = (roomId: string, pagi: PaginationType) => {

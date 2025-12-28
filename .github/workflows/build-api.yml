@@ -1,0 +1,37 @@
+name: Build, Test and Publish API
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+  
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Test
+        id: test
+        run: dotnet test --no-build --verbosity normal
+
+      - name: Publish
+        id: publish
+        if: ${{ steps.test.outcome == 'success' }}
+        run: dotnet publish --configuration Release --output ./publish

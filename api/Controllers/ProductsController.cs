@@ -113,7 +113,7 @@ namespace api.Controllers
         {
             try
             {
-                var res = await _service.CreateProductRange(req);
+                var res = await _service.CreateProductBulk(req);
 
                 return !res.Success ? GetActionResultError(res) : Ok(res);
             }

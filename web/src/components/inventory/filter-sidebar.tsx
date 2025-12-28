@@ -9,7 +9,7 @@ import type { CategorySchemaType } from "@/schemas/category.schema";
 import type { ProductFilter } from "@/types/product";
 // import { mockCategories } from "@/data/inventory";
 import { Plus } from "lucide-react";
-import ViewCategories from "./categories-modal";
+import ViewCategories from "./category/categories-modal";
 
 type Props = {
   allCategories: CategorySchemaType[] | undefined;

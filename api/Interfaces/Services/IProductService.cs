@@ -14,7 +14,7 @@ namespace api.Interfaces.Services
         Task<ApiResponse<IEnumerable<Product>>> GetOutOfStockProducts();
         Task<ApiResponse<Product>> GetProductById(int id);
         Task<ApiResponse<bool>> CreateProduct(ProductCreateRequestDto productDto);
-        Task<ApiResponse<bool>> CreateProductRange(List<ProductCreateRequestDto> productDto);
+        Task<ApiResponse<bool>> CreateProductBulk(List<ProductCreateRequestDto> productDto);
         Task<ApiResponse<bool>> UpdateProduct(ProductRequestUpdateDto productDto, int id);
         Task<ApiResponse<bool>> UpdateProductQuantity([FromBody] List<ProductRequestQuantityUpdateDto> productDto);
         Task<ApiResponse<bool>> DeleteProduct(int id);

@@ -50,6 +50,9 @@ namespace api.Services
             {
                 var newCategory = _mapper.Map<Category>(categoryDto);
 
+                Console.WriteLine(newCategory.Name, newCategory.CreatedBy);
+                Console.WriteLine(categoryDto.Name, categoryDto.CreatedBy);
+
                 var query = _repository.GetQueryable()
                     .Where(c => c.Name == categoryDto.Name)
                     .FirstOrDefault();

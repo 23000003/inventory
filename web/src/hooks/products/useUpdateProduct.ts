@@ -21,8 +21,10 @@ export const updateProduct = async ({ id, products }: UpdateProductPayload) => {
   formData.append("price", products.price.toString());
   formData.append("quantity", products.quantity.toString());
   formData.append("category_id", products.category_id.toString());
-  // formData.append("image", "");
   formData.append("created_by", products.created_by || "unknown");
+ 
+  if (products.image) 
+    formData.append("image", products.image);
 
   const { data } = await ProductService.update(id, formData);
   return data;

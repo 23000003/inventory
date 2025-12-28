@@ -1,6 +1,10 @@
-import React, { useEffect } from 'react'
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '../../ui/select';
 import {
   Dialog,
   DialogContent,
@@ -8,28 +12,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CreateProductSchema, type CreateProductSchemaType, type ProductSchemaType } from '@/schemas/product.schema';
-import { Button } from '../ui/button';
-import { Edit, ShoppingCart } from 'lucide-react';
-import { Badge } from '../ui/badge';
-import { InventoryProductActions } from '@/types/inventory.d';
-import type { CategorySchemaType } from '@/schemas/category.schema';
-import { 
-  Select,
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '../ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod/dist/zod.js';
 import { useUserStore } from '@/stores/useUserStore';
-import { Form, FormControl, FormField, FormItem,  FormMessage } from '../ui/form';
+import { Form, FormControl, FormField, FormItem,  FormMessage } from '../../ui/form';
 import useUpdateProduct from '@/hooks/products/useUpdateProduct';
 import { toastr } from '@/utils/toast';
 import { AlertDialog } from '@radix-ui/react-alert-dialog';
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../ui/alert-dialog';
 import useDeleteProduct from '@/hooks/products/useDeleteProduct';
+import { CreateProductSchema, type CreateProductSchemaType, type ProductSchemaType } from '@/schemas/product.schema';
+import type { CategorySchemaType } from '@/schemas/category.schema';
+import type { InventoryProductActions } from '@/types/inventory.d';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useEffect, useState } from 'react';
+import { Edit, ShoppingCart } from 'lucide-react';
+import { Button } from '../../ui/button';
+import { Badge } from '../../ui/badge';
+import { useQueryClient } from '@tanstack/react-query';
+import { GET_ALL_PRODUCTS_QUANTITY_KEY } from '@/hooks/products/useGetOutOfStock';
+
 
 type Props = {
   imageError: boolean;
@@ -44,7 +47,7 @@ type Props = {
   setIsModalOpen: React.Dispatch<React.SetStateAction<InventoryProductActions | null>>;
 }
 
-const ProductModal: React.FC<Readonly<Props>> = ({
+export const EditProductModal: React.FC<Props> = ({
   product,
   isEditing,
   categories,
@@ -57,109 +60,21 @@ const ProductModal: React.FC<Readonly<Props>> = ({
   setEditedProduct,
 }) => {
 
-  return (
-    isModalOpen === InventoryProductActions.VIEW ? (
-      <Dialog open={isModalOpen != null} onOpenChange={() => setIsModalOpen(null)}>
-        <DialogContent className="max-w-2xl bg-white">
-          <DialogHeader>
-            <DialogTitle>Product Details</DialogTitle>
-            <DialogDescription>
-              Complete information about {product.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {!imageError ? (
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-64 object-cover rounded-lg"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="w-full h-64 flex items-center justify-center bg-muted rounded-lg">
-                <ShoppingCart className="w-16 h-16 text-muted-foreground" />
-              </div>
-            )}
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Product Name</p>
-                <p className="text-lg font-semibold">{product.name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Description</p>
-                <p className="text-sm">{product.description}</p>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Price</p>
-                  <p className="text-lg font-bold text-price-primary">{product.price}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Quantity</p>
-                  <p className="text-lg font-semibold">{product.quantity}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Category</p>
-                  <Badge variant="default">{product.category.name}</Badge>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    ) : (
-      isModalOpen === InventoryProductActions.EDIT ? (
-        <EditProductModal
-          isEditing={isEditing}
-          product={product}
-          categories={categories}
-          imageError={imageError}
-          editedProduct={editedProduct}
-          setIsEditing={setIsEditing}
-          setImageError={setImageError}
-          setEditedProduct={setEditedProduct}
-          isModalOpen={isModalOpen}
-          setIsModalOpen={setIsModalOpen}
-        />
-      ) : (
-        isModalOpen === InventoryProductActions.DELETE ? (
-          <DeleteProductModal 
-            isEditing={isEditing}
-            product={product}
-            categories={categories}
-            imageError={imageError}
-            editedProduct={editedProduct}
-            setIsEditing={setIsEditing}
-            setImageError={setImageError}
-            setEditedProduct={setEditedProduct}
-            isModalOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
-          />
-        ) : null
-      )
-    )
-  )
-}
+  const queryClient = useQueryClient();
 
-const EditProductModal: React.FC<Props> = ({
-  product,
-  isEditing,
-  categories,
-  imageError,
-  isModalOpen,
-  setIsEditing,
-  setImageError,
-  editedProduct,
-  setIsModalOpen,
-  setEditedProduct,
-}) => {
   const { user } = useUserStore();
+
+  const [imagePreview, setImagePreview] = useState<string>(product.image);
 
   const { mutate: updateProducts, isPending } = useUpdateProduct({
     onSuccess: (message) => {
+      if(product.quantity === 0) {
+        queryClient.invalidateQueries({ queryKey: [GET_ALL_PRODUCTS_QUANTITY_KEY]});
+      }
       toastr.success(message);
       form.reset();
       setIsEditing(false);
+      setIsModalOpen(null);
     },
     onError: (message) => {
       toastr.error(message || "Failed to update products.");
@@ -183,12 +98,29 @@ const EditProductModal: React.FC<Props> = ({
   });
 
   const onSubmit = async (data: CreateProductSchemaType) => {
+    console.log(data, "DATA");
     updateProducts({ id: product.id, products: data });
   }
 
   useEffect(() => {
     console.log("Current form errors:", form.formState.errors);
   }, [form.formState.errors]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      form.reset({
+        name: editedProduct.name,
+        description: editedProduct.description,
+        price: editedProduct.price,
+        quantity: editedProduct.quantity,
+        image: undefined,
+        category_id: editedProduct.categoryId,
+        created_by: user?.username || "unknown",
+      });
+      setImagePreview(product.image);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  } , [isEditing]);
   
   return (
     <Dialog open={isModalOpen != null} onOpenChange={(open) => {
@@ -223,12 +155,44 @@ const EditProductModal: React.FC<Props> = ({
               </DialogHeader>
               <div className="space-y-4">
                 {!imageError ? (
+                  <>
                   <img
-                    src={product.image}
+                    src={imagePreview}
                     alt={product.name}
                     className="w-full h-64 object-cover rounded-lg"
                     onError={() => setImageError(true)}
                   />
+                  {isEditing ? (
+                    <FormField
+                      control={form.control}
+                      name="image"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              key={"fileInputKey"}
+                              className="cursor-pointer"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+
+                                field.onChange(file); 
+
+                                const previewUrl = URL.createObjectURL(file);
+
+                                setImagePreview(previewUrl);
+                                setImageError(false);
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : null}
+                  </>
                 ) : (
                   <div className="w-full h-64 flex items-center justify-center bg-muted rounded-lg">
                     <ShoppingCart className="w-16 h-16 text-muted-foreground" />
@@ -377,29 +341,7 @@ const EditProductModal: React.FC<Props> = ({
                   </Button>
                 )}
               </div>
-
             <div className="hidden">
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        key={"fileInputKey"}
-                        className="cursor-pointer"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          field.onChange(file); 
-                        }}
-                        />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-                />
               <FormField
                 control={form.control}
                 name="created_by"
@@ -413,7 +355,7 @@ const EditProductModal: React.FC<Props> = ({
   )
 }
 
-const DeleteProductModal: React.FC<Props> = ({ product, setIsModalOpen }) => {
+export const DeleteProductModal: React.FC<Props> = ({ product, setIsModalOpen }) => {
   
   const { mutate: deleteProduct, isPending } = useDeleteProduct({
     onSuccess: (message) => {
@@ -454,5 +396,3 @@ const DeleteProductModal: React.FC<Props> = ({ product, setIsModalOpen }) => {
     </AlertDialog>
   )
 }
-
-export default ProductModal;

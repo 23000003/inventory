@@ -81,10 +81,10 @@ const HomeNavbar: React.FC = () => {
                 </p>
               </div>
               <div className="grid gap-2">
-                <div className="grid grid-cols-3 items-center gap-4">
+                <div className="flex flex-col gap-4">
                   {outOfStocks && outOfStocks.length > 0 ? (
                     outOfStocks.map((product) => (
-                      <span className="text-sm col-span-2">
+                      <span className="text-sm border-b pb-2">
                         {product.name} is Out Of Stock
                       </span>
                     ))

@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import InventoryHeader from "@/components/inventory/inventory-header";
 import FilterSidebar from "@/components/inventory/filter-sidebar";
-import ProductCard from "@/components/inventory/product-card";
+import ProductCard from "@/components/inventory/products/product-card";
 import type { ProductFilter } from "@/types/product";
 import type { PaginationType } from "@/types/pagination";
 import useGetProducts from "@/hooks/products/useGetProducts";
@@ -101,7 +101,7 @@ const Inventory = () => {
     });
   }, [setSearchParams]);
 
-  if(productLoading || categoryLoading) return <h1>Loading...</h1>;
+  if(productLoading || categoryLoading) return <InventoryLazy />;
   if(productError || categoryError) return <h1>Error loading products or categories</h1>;
 
   return (
@@ -170,5 +170,16 @@ const Inventory = () => {
     </div>
   );
 };
+
+const InventoryLazy = () => (
+  <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-background h-[60svh]">
+    <div className="relative">
+      <div className="w-32 h-32 rounded-full border-8 border-secondary animate-pulse" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-28 h-28 rounded-full border-8 border-t-primary border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+      </div>
+    </div>
+  </div>
+);
 
 export default Inventory;

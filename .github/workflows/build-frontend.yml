@@ -1,4 +1,4 @@
-name: Build Director-Manager Web
+name: Build Web
 
 on:
   pull_request:
